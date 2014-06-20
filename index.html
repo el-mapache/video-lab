@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebRTC codelab</title>
+  <style>
+    video {
+      display:none;
+    }
+    canvas {
+      background: transparent;
+    }
+    #canvas-div button {
+      position:absolute;
+      top:500px;
+    }
+  </style>
+  <script src="js/util.js"></script>
+</head>
+<body>
+  <video id="camera-input"></video>
+  <canvas height="360" width="480"></canvas>
+  <br>
+  <div>
+    <button id="snapshot">Take a Photo</button>
+    <button id="motion-blur">Blur</button>
+    <button id="stop">Stop</button>
+
+    <br><br>
+    <input class="filter" type="checkbox" name="filter" value="grayscale">Grayscale<br>
+    <input class="filter" type="checkbox" name="filter" value="invert">Invert<br>
+    <input class="filter" type="checkbox" name="filter" value="threshold">Threshold<br>
+    <input class="filter" type="checkbox" name="filter" value="brightness">Brightness<br>
+    <input class="filter" type="checkbox" name="filter" value="bayer">Bayer Monochrome<br>
+    <input class="filter" type="checkbox" name="filter" value="bayerColor">Bayer 8Color<br>
+
+    <button class="convolver">Emboss</button>
+    <button class="convolver">Laplace</button>
+    <button class="convolver">Sharpen</button>
+    <button class="convolver">Blur</button>
+    <button id="reset">Reset</button>
+  </div>
+
+  <script>
+   navigator.getUserMedia = navigator.getUserMedia ||
+                            navigator.webkitGetUserMedia ||
+                            navigator.mozGetUserMedia;
+
+
+    var hdConstraints = {
+      video: {
+        mandatory: {
+          minWidth: 1280,
+          minHeight: 720
+        }
+      }
+    };
+
+    var sdConstraints = {
+      video: {
+        mandatory: {
+          minWidth: 480,
+          minHeight: 360
+        }
+      }
+    };
+
+    function onError(error) {
+      console.log("getUserMedia encountered the following error: " + error);
+    }
+
+    var Filter = {
+      convolverActive: false,
+
+      convolve: function(pixels, weights, opacity) {
+        var side = Math.round(Math.sqrt(weights.length));
+        var halfSide = Math.floor(side/2);
+        var src = pixels.data;
+        var sw = pixels.width;
+        var sh = pixels.height;
+        // pad output by the convolution matrix
+        var w = sw;
+        var h = sh;
+        var output  = document.createElement("canvas").getContext("2d").createImageData(w,h);
+        var dst = output.data;
+        // go through the destination image pixels
+        var alphaFac = opacity ? 1 : 0;
+        for (var y=0; y<h; ++y) {
+          for (var x=0; x<w; ++x) {
+            // alias for further manipulation
+            var sy = y;
+            var sx = x;
+
+            var dstOff = (y*w+x)*4;
+            // calculate the weighed sum of the source image pixels that
+            // fall under the convolution matrix
+            var r=0, g=0, b=0, a=0;
+            for (var cy=0; cy<side; cy++) {
+              for (var cx=0; cx<side; cx++) {
+                var scy = sy + cy - halfSide;
+                var scx = sx + cx - halfSide;
+                if (scy >= 0 && scy < sh && scx >= 0 && scx < sw) {
+                  var srcOff = (scy*sw+scx)*4;
+                  var wt = weights[cy*side+cx];
+                  r += src[srcOff] * wt;
+                  g += src[srcOff+1] * wt;
+                  b += src[srcOff+2] * wt;
+                  a += src[srcOff+3] * wt;
+                }
+              }
+            }
+            dst[dstOff] = r;
+            dst[dstOff+1] = g;
+            dst[dstOff+2] = b;
+            dst[dstOff+3] = 255;//a;// + alphaFac*(255-a);
+          }
+        }
+        return output;
+      },
+
+      grayscale: function(imageData) {
+        /* The human eye is most sensitive to green, then red, then blue
+         * so each of the colors is weighted differently.
+         * The first 1 bit is shifted over three places the the right and
+         * excess bits are discarded.  This basically divides by 8 and rounds.
+         *
+         * Returns a weighted average of the colors
+        */
+        var l = imageData.data.length,
+            data = imageData.data,
+            i = 0,
+            r,g,b;
+
+        for (i; i < l; i += 4) {
+          r = data[i];
+          g = data[i+1];
+          b = data[i+2];
+
+          // >>> 3 divides the total by 8 and rounds down.
+          data[i] = data[i+1] = data[i+2] = (3*r+4*g+b) >>> 3
+        }
+
+        return data
+      },
+
+      threshold: function(imageData, threshold) {
+        /* Make the blacks black and the whites white */
+
+        threshold = threshold || 70
+
+        var l = imageData.data.length,
+            data = imageData.data,
+            i = 0,
+            r,g,b;
+
+        for (i; i < l; i += 4) {
+          r = data[i];
+          g = data[i+1];
+          b = data[i+2];
+
+          // >>> 3 divides the total by 8 and rounds down.
+          data[i] = data[i+1] = data[i+2] = ((3*r+4*g+b) >>> 3) >= threshold ? 255 : 0;
+        }
+
+        return data;
+      },
+
+      invert: function(imageData) {
+        var length = imageData.data.length,
+            ii = 0,
+            data = imageData.data;
+
+        for (ii; ii < length; ii += 4) {
+          data[ii] = 255 - data[ii];
+          data[ii + 1] = 255 - data[ii + 1];
+          data[ii + 2] = 255 - data[ii + 2];
+        }
+
+        return data;
+      },
+
+      brightness: function(imageData, lum) {
+        var length = imageData.data.length,
+            ii = 0,
+            data = imageData.data;
+
+        lum = lum || 22;
+
+        for (ii; ii < length; ii += 4) {
+          data[ii] = data[ii] + lum;
+          data[ii + 1] = data[ii + 1] + lum;
+          data[ii + 2] = data[ii + 2] + lum;
+        }
+
+        return data;
+      },
+
+      emboss: function(imageData) {
+        var w = imageData.width;
+        var data = imageData.data;
+        var length = data.length;
+        var i = 0;
+
+        for (i; i < length; ++i) {
+          if ( (i & 3) == 3 ) continue;
+
+          data[i] = 125 + (data[i] << 1) - data[i + 4] - data[i + (w << 2)];
+        }
+
+        return imageData;
+      },
+
+      // Perform some gameboy era pixelations
+      // TODO maybe this should be a filter. doesnt really convolve
+      bayer: function(imageData) {
+        var w = imageData.width;
+        var data = imageData.data;
+        var length = data.length;
+
+        var i = 0;
+        var matrix = [8,3,4,6,1,2,7,5,9];
+
+        while ((i = i + 4) < length) {
+          var  ii = (i >> 2);
+          var x = (ii % w);
+          var y = ((ii - x) / w);
+
+          // Scale our color value (0-765) in between 1 and 9
+          /*
+           * General scaling formula
+           * initial_range := (min..max)
+           * target_range := (a..b)
+           * x := some value in the initial range
+           *
+           * ((b - a) * (x - min) / (max - min)) + 1
+          */
+          var pixVal = (((8 * (data[i]+data[i+1]+data[i+2])) / 765) | 0) + 1;
+
+          data[i] = data[i + 1] = data[i + 2] = pixVal >= matrix[(y%2)*3+(x%2)] ? 255 : 0;
+        }
+
+        return data;
+      },
+
+      bayerColor: function(imageData) {
+        var w = imageData.width;
+        var data = imageData.data;
+        var length = data.length;
+
+        var i = 0;
+        var bayerColor = {
+          0: [0,0,0],
+          1: [255,0,0],
+          2: [0,255,0],
+          3: [0,0,255],
+          4: [255,255,0],
+          5: [255,0,255],
+          6: [0,255,255],
+          7: [100,100,100],
+          8: [255,255,255],
+          9: [255,255,255]
+        }
+
+        while ((i = i + 20) < length) {
+          var  ii = (i >> 2);
+          var x = (ii % w);
+          var y = ((ii - x) / w);
+          var pixVal = (((8 * (data[i]+data[i+1]+data[i+2])) / 765) | 0) + 1;
+          var newcolor = bayerColor[pixVal];
+          
+          data[i] = newcolor[0];
+          data[i+1] = newcolor[1];
+          data[i+2] = newcolor[2];
+        }
+
+        return data;
+      },
+
+      /*
+       * 480 * 360 = 172800
+       * sections (blocks, sectors, etc) 172800 / 100 -> 1728
+       *
+       * 691200 = total number of pixels in image
+      */
+      pixelate: function(blocks, srcData) {
+        // Size of the image area we wish to pixelate.
+        var h = srcData.height;
+        var w = srcData.width;
+        var totalArea = h * w;
+        var output = generateImageData(w, h);
+        var pixels = srcData.data;
+        var dstPixels = output.data;
+        var pixelLen = pixels.length;
+        var sections = blocks;
+        var neighbors = [];
+
+        // How many pixels are in each subdivision.
+        var blockSize = (totalArea / blocks) | 0;
+        // Now we have to calculate the average value of all the pixels in the area.
+        // for each block, get the the average, then set all pixels in the block to
+        // that average.
+
+        // Loop through each block.
+        // Every block has as many pixels as the (totalarea / blocksize * 4)
+        while (blocks > 0) {
+          var pix = (sections - blocks) * blockSize;
+          var p = (sections - blocks) * blockSize;
+
+          neighbors.length = 0;
+          // do stuff
+          for (pix; pix < blockSize; pix +=4) {
+            // Transform the pixels into a single int.
+            var result = pixels[pix] << 24;      // roy
+                result |= pixels[pix + 1] << 16; // gee
+                result |= pixels[pix + 2] << 8;  // biv
+
+            neighbors.push(result);
+          }
+
+          neighbors.sort();
+          var medianColor = neighbors[400]; // roughly
+
+          for (p; p < blockSize; p+=4) {
+            // Unroll all the data from the single int.
+            dstPixels[p]     = 100//medianColor >> 24 & 0xff;
+            dstPixels[p + 1] = 200//medianColor >> 16 & 0xff;
+            dstPixels[p + 2] = 123//medianColor >> 8 & 0xff;
+            dstPixels[p + 3] = 4// set this as fully visible
+          }
+          blocks--;
+        }
+
+        return output.data;
+      }
+
+    }
+
+    // Takes width and height, returns an empty image data array for
+    // processing.
+    function generateImageData(w, h) {
+      return document.createElement("canvas").getContext("2d").getImageData(0, 0, w, h);
+    }
+
+    // Note: this shit is very cool, and very slow
+    function medianFilter(srcData, filterSize, sample) {
+      // Set up some varz
+      var h = srcData.height,
+          w = srcData.width,
+          pixels = srcData.data,
+          neighbors = [],
+          matrix = filterSize * filterSize,
+          medianPos = (matrix / 2) | 0,
+          edge = Math.round(Math.sqrt(matrix)),
+          halfEdge = (edge/2) | 0,
+          output = generateImageData(w,h),
+          dstPixels = output.data;
+
+      // We need to loop through every pixel of the source image
+      for (var x = 0; x < w; x++) {
+        for (var y = 0; y < h; y++) {
+          // Maintain a separate variable to act as an accessor
+          // for the neighbors array, reset on each iteration
+          var count = 0;
+          // Shifting two bits to the left multiples the total product
+          // by 4.
+          var dstOffset = (y * w + x) << 2;
+          neighbors.length = 0;
+
+          // This set of loops defines the maxtrix "window" that we'll
+          // move over our pixels to get all neighboring values
+          for (var xx = 0; xx < edge; xx++) {
+            for (var yy = 0; yy < edge; yy++) {
+              // get the x and y coords of where our lil'
+              // window is right now in the image
+              var scx = x + xx - halfEdge;
+              var scy = y + yy - halfEdge;
+
+              // Is our window within the bounds of the image?
+              if ( scx >= 0 && scx < w && scy >= 0 && scy < h) {
+
+                var windowPos = (scy * w + scx) << 2
+
+                // Stuff the color data into a single int
+                var result = pixels[windowPos] << 24; // roy
+                result |= pixels[windowPos + 1] << 16; // gee
+                result |= pixels[windowPos + 2] << 8; // biv
+                neighbors[count] = result;
+                count++;
+              }
+            }
+          }
+
+          // derive the median value
+          neighbors.sort();
+          var color = neighbors[medianPos];
+
+          // Unroll all the data from the single int.
+          dstPixels[dstOffset] = color >> 24 & 0xff;
+          dstPixels[dstOffset + 1] = color >> 16 & 0xff;
+          dstPixels[dstOffset + 2] = color >> 8 & 0xff;
+          dstPixels[dstOffset + 3] = 255; // set this as fully visible
+        }
+      }
+      return output.data;
+    }
+
+    // Take a snapshot with your browser
+    function PhotoBooth() {
+      // Do we have an active booth
+      this.active = false;
+
+      // The media stream object
+      this.stream = null;
+
+      // The booth itself
+      this.canvas = document.querySelector("canvas");
+
+      // An in-memory canvas for convolution effects.
+      this.feed = document.createElement("canvas");
+
+      // The video element playing our camera feed.
+      this.video = document.getElementById("camera-input");
+
+      // The canvas context
+      this.canvasCtx = null;
+
+      // Has the user allowed camera access
+      this.allowedAccessToCamera = false;
+
+      // The aspect ratio
+      this.aspectRatio = null;
+
+      this.filters = [];
+
+      this.height = this.canvas.height;
+      this.width = this.canvas.width;
+
+      this.requestAccess();
+      this.bindEvents();
+    }
+
+    PhotoBooth.prototype = {
+      bindEvents: function() {
+        document.getElementById("snapshot").addEventListener("click", this.takePhoto.bind(this));
+        document.getElementById("motion-blur").addEventListener("click", this.blur.bind(this));
+        document.getElementById("stop").addEventListener("click", this.toggleVideo.bind(this));
+        var nodes = document.querySelectorAll(".filter")
+
+        for  (var i = 0; i < nodes.length; i++) {
+          nodes[i].addEventListener("click", this.addFilter.bind(this));
+        }
+
+        var convolvers = document.querySelectorAll(".convolver");
+
+        for  (var i = 0; i < convolvers.length; i++) {
+          convolvers[i].addEventListener("click", this.convolve.bind(this));
+        }
+
+        document.getElementById("reset").addEventListener("click", this.reset.bind(this));
+      },
+
+      requestAccess: function() {
+        navigator.getUserMedia({
+          video: true
+        }, this._onAccessGranted.bind(this),
+           this._onAccessDenied.bind(this)
+        );
+      },
+
+      _onAccessDenied: function() {
+        console.log('User denied access to the webcam.');
+      },
+
+      _onAccessGranted: function(localMediaStream) {
+        // State variables for the photo booth
+        this.stream = localMediaStream;
+        this.active = true;
+        this.allowedAccessToCamera = true;
+
+
+        // Local variables for drawing
+        var rfid = null;
+        this.video.src = window.URL.createObjectURL(this.stream);
+
+        this.video.addEventListener("loadeddata", this._onVideoDataReady.bind(this));
+      },
+
+      draw: function(time) {
+        var i = 0;
+
+        if (!this.active && !this.stream) {
+          window.cancelAnimationFrame(this.rfid);
+        }
+
+        this.canvasCtx.drawImage(this.video, 0, 0);
+        var output = imageData = this.canvasCtx.getImageData(0, 0, this.width, this.height);
+
+        if (this.convolver) {
+          if (this.convolver.type === "emboss") {
+            imageData = output = Filter.emboss(imageData); 
+          } else {
+            imageData = output = Filter.convolve(imageData, this.convolver.matrix);
+          }
+        }
+
+        if (this.filters.length != 0) {
+          while(i < this.filters.length) {
+            output.data = Filter[this.filters[i]](output);
+            ++i;
+          }
+
+          this.canvasCtx.putImageData(output, 0, 0);
+        } else {
+          this.canvasCtx.putImageData(imageData, 0, 0);
+        }
+
+        this.rfid = window.requestAnimationFrame(this.draw.bind(this));
+      },
+
+      _onVideoDataReady: function(evt) {
+        this.video.play();
+
+        this.canvasCtx = this.canvas.getContext("2d");
+
+        var output = imageData = null;
+
+        this.rfid = window.requestAnimationFrame(this.draw.bind(this));
+      },
+
+      addFilter: function(evt) {
+        if (!this.allowedAccessToCamera && !this._isActive) return false;
+
+        var selectedFilter = evt.currentTarget.value;
+
+        if (this.filters.indexOf(selectedFilter) !== -1) {
+          this.filters.splice(this.filters.indexOf(selectedFilter), 1);
+
+          return;
+        }
+
+        this.filters.push(selectedFilter);
+      },
+
+      convolve: function(evt) {
+        var convolver = evt.currentTarget.innerHTML.toLowerCase();
+
+        if (this.convolver && this.convolver.type === convolver) {
+          return this.convolver = null;
+        }
+
+        switch (convolver) {
+          case "laplace":
+            this.convolver = {
+              type: convolver,
+              matrix: [1,1,1,1,-8,1,1,1,1]
+            };
+            break;
+          case "sharpen":
+            this.convolver = {
+              type: convolver,
+              matrix: [0,-1,0,-1,5,-1,0,-1,0]
+            };
+            break;
+          case "blur":
+            var b = 1/3;
+            this.convolver = {
+              type: convolver,
+              matrix: [b,b,b,b,b,b,b,b,b]
+            };
+            break;
+          case "emboss":
+            this.convolver = {
+              type: convolver,
+              matrix: null
+            };
+            break;
+        }
+      },
+
+      _isActive: function() {
+        return this.active && this.stream;
+      },
+
+      blur: function() {
+        if (!this._isActive()) return false;
+
+
+        var ctx = this.canvas.getContext("2d"),
+            currentAlpha = ctx.globalAlpha;
+
+        ctx.globalAlpha = currentAlpha > 0.1 && currentAlpha < 0.2 ? 1.0 : 0.1;
+      },
+
+      toggleVideo: function() {
+        if (this._isActive()) {
+          this.video.pause();
+          this.active = false;
+        } else {
+          this.video.play();
+          this.active = true;
+        }
+      },
+
+      takePhoto: function(evt) {
+        if (!this._isActive()) return false;
+
+        var anchor, click;
+
+        anchor = document.createElement("a");
+        anchor.href = this.canvas.toDataURL("image/png");
+        anchor.download = "image"+ +new Date() + ".png";
+
+        click = document.createEvent("Event");
+        click.initEvent("click", true, true);
+
+        anchor.dispatchEvent(click);
+      },
+
+      reset: function() {
+        this.filters.length = 0;
+      }
+    };
+
+    if (chrome && /Chrome\/(2{1}9{1}|3{1}[0-9])/.test(navigator.appVersion)) {
+      new PhotoBooth();
+    } else {
+      alert("This page only supports Google Chrome, version 29 or higher.");
+    }
+
+  </script>
+</body>
+</html>

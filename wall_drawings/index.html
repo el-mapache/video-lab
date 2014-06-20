@@ -1,0 +1,105 @@
+<!DOCTYPE>
+<html>
+<head>
+  <style>
+    #wall {
+      background: #eeeee6;
+    }
+  </style>
+</head>
+<body>
+  <canvas height="400" width="600" id="wall"></canvas>
+</body>
+<script src="sample2d.js"></script>
+<script>
+  var context = document.getElementById("wall").getContext("2d");
+  var plot = {};
+  // Define the area modifier of the square (ie, size is 10*10)
+  var SIZE = 3;
+
+  // Lay out our grid
+//  for (var x = 0;x < 585;x++) {
+//    for (var y = 0;y < 385;y++) {
+ // /    plot[x+ "," + y] = false;
+ //   }
+//  }
+
+//  for(var ii = 0; ii < 50; ii++) {
+///    draw(null);
+//  }
+
+  function draw(size,point) {
+    if (size) SIZE = size;
+    var element = context.createImageData(SIZE,SIZE);
+    var data = element.data;
+    var r = random(255);
+    var g = random(255);
+    var b = random(255);
+    var a = Math.random();
+
+    data[0] = r;
+    data[1] = g;
+    data[2] = b;
+    data[3] = a;
+
+    //var point = plotPoint();
+    //context.fillRect(point.x, point.y, SIZE, SIZE);
+    context.putImageData(element, point.x * SIZE, point.y * SIZE);
+    context.beginPath();
+    context.arc(point.x, point.y, SIZE, 0, Math.PI * 2, false);
+    context.closePath();
+    context.fillStyle = "rgba("+r+","+g+","+b+","+a+")";
+    context.fill();
+  }
+
+  function random(seed) {
+    return Math.floor(Math.random() * seed);
+  }
+
+  function plotPoint() {
+    var point = {};
+
+    var x,y;
+
+    x = random((585/SIZE));
+    y = random((385/SIZE));
+
+    //if (plot[x+","+y]) plotPoint();
+   
+    // open point on the grid, store it and flag as occupied 
+    point.x = x;
+    point.y = y;
+    
+    plot[x+","+y] = true;
+
+    return point;
+  }
+
+   //
+   // EQUAL-DISTRIBUTION STOCHASTIC SAMPLING
+  //
+  function samples2d( number_of_samples ) {
+    // Samples will be an array of arrays, representing the
+    // x and y co-ordinantes returned by the hilbert function
+    var samples = [];
+        delta   = 1.0 / number_of_samples;
+    //var delta = number_of_samples
+    for ( var ii = 0; ii < 1.0; ii += delta ) {
+      samples.push( window.hilbertify(ii + Math.random() * delta, 2) );
+    }
+    return samples;
+  };
+
+  setInterval(function() {
+  var NUMBER_OF_SAMPLES = 50;//Math.floor(Math.random() * 200);
+  var samples = samples2d( NUMBER_OF_SAMPLES );
+  for ( var ii = 0; ii < samples.length; ii++ ) {
+    var x = /*(585/2) - */ samples[ii][0] * 585 
+    var y = /*(385/2) - */ samples[ii][1] * 385 
+    draw(null,{x: Math.floor(Math.abs(x)), y:Math.floor(Math.abs(y))});
+  }
+  },50);
+
+</script>
+</script>
+</html>
