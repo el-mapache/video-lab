@@ -36,6 +36,9 @@
     <input class="filter" type="checkbox" name="filter" value="lowResColor">4bit RGB 16 Color<br>
     <input class="filter" type="checkbox" name="filter" value="median">Median<br>
     <input class="filter" type="checkbox" name="filter" value="emboss">emboss<br>
+    <input class="filter" type="checkbox" name="filter" value="burn">burn<br>
+    <input class="filter" type="checkbox" name="filter" value="saturate">saturate<br>
+    <input class="filter" type="checkbox" name="filter" value="contrast">contrast<br>
 
     <button class="convolver">Laplace</button>
     <button class="convolver">Sharpen</button>
@@ -68,6 +71,27 @@
         }
       }
     };
+
+    var contrast_lookup = {};
+    var newValue = 0;
+    c = (100.0 + 24) / 100.0;
+
+    c *= c;
+
+    for (var i = 0; i < 256; i++) {
+      newValue = i;
+      newValue = newValue / 255.0;
+      newValue -= 0.5;
+      newValue *= c;
+      newValue += 0.5;
+      newValue *= 255;
+
+      if (newValue < 0)
+        newValue = 0;
+      if (newValue > 255)
+        newValue = 255;
+      contrast_lookup[i] = newValue | 0;  
+    } 
 
     function compareNumbers(a,b) {
       return a - b;
@@ -128,6 +152,60 @@
         return output;
       },
 
+      saturate: function(imageData, change) {
+        var PR = 0.299;
+        var PG = 0.587;
+        var PB = 0.114;
+
+        change = change || 2;
+
+        var data = imageData.data;
+        var length = data.length;
+        var r,g,b;
+        var i = 0;
+
+        for(i; i < length; i += 4) {
+          r = data[i];
+          g = data[i+1];
+          b = data[i+2];
+
+          var p = Math.sqrt( ((r*r) * PR) + ((g*g) * PG) + ((b*b) * PB) );
+
+          data[i] =   p + (r-p) * change;
+          data[i+1] = p + (g-p) * change;
+          data[i+2] = p + (b-p) * change;
+        }
+
+        return data;
+      },
+
+      contrast: function(imageData, contrast) {      
+        var data = imageData.data;
+        var length = data.length;
+        var r,g,b;
+        var i = 0;
+        // contrast = 12;
+
+        // contrast = (contrast + 100.0)/100.0;
+        // contrast *= contrast;
+
+        for( i; i < length; i = i + 4) {
+          // r = data[i] / 255.0;
+          // g = data[i+1] / 255.0;
+          // b = data[i+2] / 255.0;
+          
+          // r =   (((r - 0.5) * contrast) + 0.5) * 255;
+          // g = (((g - 0.5) * contrast) + 0.5) * 255;
+          // b =  (((b - 0.5) * contrast) + 0.5) * 255;
+
+          data[i] =   contrast_lookup[data[i]]//r < 0 ? 0 : r > 255 ? 255 : r | 0;
+          data[i+1] = contrast_lookup[data[i+1]]//g < 0 ? 0 : g > 255 ? 255 : g | 0;
+          data[i+2] =  contrast_lookup[data[i+2]]//b < 0 ? 0 : b > 255 ? 255 : b | 0;
+        }
+
+        return data;
+      },
+
       grayscale: function(imageData) {
         /* The human eye is most sensitive to green, then red, then blue
          * so each of the colors is weighted differently.
@@ -148,6 +226,26 @@
 
           // >>> 3 divides the total by 8 and rounds down.
           data[i] = data[i+1] = data[i+2] = (3*r+4*g+b) >>> 3
+        }
+
+        return data
+      },
+
+      burn: function(imageData) {
+        var l = imageData.data.length,
+            data = imageData.data,
+            i = 0,
+            r,g,b;
+
+        for (i; i < l; i += 4) {
+          r = data[i];
+          g = data[i+1];
+          b = data[i+2];
+
+
+          data[i] = r ^ (data[i +100] || 255)
+          data[i+1] = g ^ (data[i - 20000] || 255)
+          data[i+2] = b ^ (data[i * 2] || 255)
         }
 
         return data
@@ -289,9 +387,9 @@
           var pixVal = (((8 * (data[i]+data[i+1]+data[i+2])) / 765) | 0) + 1;
           var newcolor = bayerColor[pixVal];
           
-          data[i] = newcolor[0];
-          data[i+1] = newcolor[1];
-          data[i+2] = newcolor[2];
+          data[i] = Math.pow(data[i],2) * -4//newcolor[0];
+          data[i+1] = Math.pow(data[i],3) //newcolor[1];
+          data[i+2] = data[i+2] * 0.457;//newcolor[2];
         }
 
         return data;
@@ -549,8 +647,10 @@
         } else {
           this.canvasCtx.putImageData(imageData, 0, 0);
         }
-
-        this.rfid = window.requestAnimationFrame(this.draw.bind(this));
+        var self = this;
+        setTimeout(function(){},10);
+        this.rfid =  window.requestAnimationFrame(self.draw.bind(self));
+        
       },
 
       _onVideoDataReady: function(evt) {
@@ -645,14 +745,19 @@
       },
 
       takePhoto: function(evt) {
-        if (!this._isActive()) return false;
+        //if (!this._isActive()) return false;
 
         var anchor, click;
 
         anchor = document.createElement("a");
         anchor.href = this.canvas.toDataURL("image/png");
+        //window.location = this.canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        //return;
         anchor.download = "image"+ +new Date() + ".png";
 
+//anchor.innerHTML = 'p';
+  //  document.body.appendChild(anchor);
+  //  return;
         click = document.createEvent("Event");
         click.initEvent("click", true, true);
 
