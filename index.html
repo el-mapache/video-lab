@@ -30,22 +30,27 @@
     <input class="filter" type="checkbox" name="filter" value="invert">Invert<br>
     <input class="filter" type="checkbox" name="filter" value="threshold">Threshold<br>
     <input class="filter" type="checkbox" name="filter" value="brightness">Brightness<br>
+    <input class="filter" type="checkbox" name="filter" value="saturate">saturate<br>
+    <input class="filter" type="checkbox" name="filter" value="contrast">contrast<br>
     <input class="filter" type="checkbox" name="filter" value="sepia">Sepia<br>
     <input class="filter" type="checkbox" name="filter" value="bayer">Bayer Monochrome<br>
     <input class="filter" type="checkbox" name="filter" value="bayerColor">Bayer 8Color<br>
     <input class="filter" type="checkbox" name="filter" value="lowResColor">4bit RGB 16 Color<br>
     <input class="filter" type="checkbox" name="filter" value="median">Median<br>
     <input class="filter" type="checkbox" name="filter" value="emboss">emboss<br>
-    <input class="filter" type="checkbox" name="filter" value="burn">burn<br>
-    <input class="filter" type="checkbox" name="filter" value="saturate">saturate<br>
-    <input class="filter" type="checkbox" name="filter" value="contrast">contrast<br>
+    <input class="filter" type="checkbox" name="filter" value="burnX">burn xor<br>
+    <input class="filter" type="checkbox" name="filter" value="burnO">burn or<br>
+    <input class="filter" type="checkbox" name="filter" value="burnA">burn and<br>
 
     <button class="convolver">Laplace</button>
+    <button class="convolver">Sobel</button>
     <button class="convolver">Sharpen</button>
     <button class="convolver">Blur</button>
     <button class="convolver">Emboss</button>
     <button class="convolver">Edge</button>
     <button id="reset">Reset</button>
+
+    <button id='loop'>Store last second of video</button>
   </div>
 
   <script>
@@ -72,6 +77,8 @@
       }
     };
 
+    var dataBuffer = -1;
+
     var contrast_lookup = {};
     var newValue = 0;
     c = (100.0 + 24) / 100.0;
@@ -91,7 +98,19 @@
       if (newValue > 255)
         newValue = 255;
       contrast_lookup[i] = newValue | 0;  
-    } 
+    }
+
+    // var gray = [];
+    // var iterator;
+    // for (iterator = 0; iterator < 256; iterator++) {
+    //   gray[r]
+      
+      
+    // }
+
+    function grayscale(r,g,b) {
+      return (0.21 * r + 0.72 * g + 0.07 * b);
+    }
 
     function compareNumbers(a,b) {
       return a - b;
@@ -105,30 +124,42 @@
       convolverActive: false,
 
       convolve: function(pixels, weights, opacity) {
+        // This determines how many rows the kernal has
         var side = Math.round(Math.sqrt(weights.length));
+        // offset based on kernal size
         var halfSide = Math.floor(side/2);
         var src = pixels.data;
+        // source width
         var sw = pixels.width;
+        // source height
         var sh = pixels.height;
         // pad output by the convolution matrix
-        var w = sw;
-        var h = sh;
-        var output  = document.createElement("canvas").getContext("2d").createImageData(w,h);
+
+        var output  = document.createElement("canvas").getContext("2d").createImageData(sw,sh);
         var dst = output.data;
         // go through the destination image pixels
         var alphaFac = opacity ? 1 : 0;
-        for (var y=0; y<h; ++y) {
-          for (var x=0; x<w; ++x) {
+        var y = 0;
+
+        while ((++y) < sh) {
+          var x = 0;
+          while ((++x) < sw) {
             // alias for further manipulation
             var sy = y;
             var sx = x;
 
-            var dstOff = (y*w+x)*4;
+            var dstOff = (y*sw+x)*4;
             // calculate the weighed sum of the source image pixels that
             // fall under the convolution matrix
-            var r=0, g=0, b=0, a=0;
+            var r = 0, g = 0, b = 0, a =0;
+            //var cy = 0;
+
+            // cy refers the the kernal row, the first row of the matrix
             for (var cy=0; cy<side; cy++) {
+              //var cx = 0;
+              //cy refers to each element within the kernal row
               for (var cx=0; cx<side; cx++) {
+
                 var scy = sy + cy - halfSide;
                 var scx = sx + cx - halfSide;
                 if (scy >= 0 && scy < sh && scx >= 0 && scx < sw) {
@@ -224,18 +255,19 @@
           g = data[i+1];
           b = data[i+2];
 
-          // >>> 3 divides the total by 8 and rounds down.
-          data[i] = data[i+1] = data[i+2] = (3*r+4*g+b) >>> 3
+          data[i] = data[i+1] = data[i+2] = (0.21 * r + 0.72 * g + 0.07 * b);//3*r+4*g+b) >>> 3
         }
 
         return data
       },
 
-      burn: function(imageData) {
+      burnX: function(imageData) {
         var l = imageData.data.length,
             data = imageData.data,
             i = 0,
             r,g,b;
+
+        var buffer = dataBuffer.data;
 
         for (i; i < l; i += 4) {
           r = data[i];
@@ -243,9 +275,53 @@
           b = data[i+2];
 
 
-          data[i] = r ^ (data[i +100] || 255)
-          data[i+1] = g ^ (data[i - 20000] || 255)
-          data[i+2] = b ^ (data[i * 2] || 255)
+          data[i] =   r ^ (data[i / 2] || 255);//(data[i +100] || 255);
+          data[i+1] = g ^ (data[i - 20000] || 255);
+          data[i+2] = b ^ (data[i * 2] || 255);
+        }
+
+        return data
+      },
+
+      burnO: function(imageData) {
+        var l = imageData.data.length,
+            data = imageData.data,
+            i = 0,
+            r,g,b;
+
+        var buffer = dataBuffer.data;
+
+        for (i; i < l; i += 4) {
+          r = data[i];
+          g = data[i+1];
+          b = data[i+2];
+
+
+          data[i] =   r | (data[i / 2] || 255);//(data[i +100] || 255);
+          data[i+1] = g | (data[i - 20000] || 255);
+          data[i+2] = b | (data[i * 2] || 255);
+        }
+
+        return data
+      },
+
+      burnA: function(imageData) {
+        var l = imageData.data.length,
+            data = imageData.data,
+            i = 0,
+            r,g,b;
+
+        var buffer = dataBuffer.data;
+
+        for (i; i < l; i += 4) {
+          r = data[i];
+          g = data[i+1];
+          b = data[i+2];
+
+
+          data[i] =   r & (data[i / 2] || 255);//(data[i +100] || 255);
+          data[i+1] = g & (data[i - 20000] || 255);
+          data[i+2] = b & (data[i * 2] || 255);
         }
 
         return data
@@ -313,10 +389,11 @@
           var g = data[ii+1];
           var b = data[ii+2];
 
-          data[ii] = Math.min((r * .393) + (g *.769) + (b * .189)) & 0xff;
-          data[ii] = Math.min((r * .349) + (g *.686) + (b * .168)) & 0xff;
-          data[ii] = Math.min((r * .272) + (g *.534) + (b * .131)) & 0xff;
+          data[ii] = ((r * 0.393) + (g * 0.769) + (b * 0.189)) | 0;
+          data[ii+1] = ((r * 0.349) + (g * 0.686) + (b * 0.168)) | 0;
+          data[ii+2] = ((r * 0.272) + (g * 0.534) + (b * 0.131)) | 0;
         }
+        return data;
       },
 
       emboss: function(imageData) {
@@ -387,9 +464,9 @@
           var pixVal = (((8 * (data[i]+data[i+1]+data[i+2])) / 765) | 0) + 1;
           var newcolor = bayerColor[pixVal];
           
-          data[i] = Math.pow(data[i],2) * -4//newcolor[0];
-          data[i+1] = Math.pow(data[i],3) //newcolor[1];
-          data[i+2] = data[i+2] * 0.457;//newcolor[2];
+          data[i] = newcolor[0];
+          data[i+1] = newcolor[1];
+          data[i+2] = newcolor[2];
         }
 
         return data;
@@ -559,6 +636,8 @@
       // The aspect ratio
       this.aspectRatio = null;
 
+      this.shouldStore = false;
+
       this.filters = [];
 
       this.height = this.canvas.height;
@@ -595,6 +674,16 @@
         }
 
         document.getElementById("reset").addEventListener("click", this.reset.bind(this));
+        document.getElementById("loop").addEventListener('click', this.store.bind(this))
+      },
+
+      store: function() {
+        if (this.shouldStore) {
+          dataBuffer.length = 0;
+        }
+
+        this.shouldStore = !this.shouldStore;
+        
       },
 
       requestAccess: function() {
@@ -632,6 +721,7 @@
 
         this.canvasCtx.drawImage(this.video, 0, 0);
         var output = imageData = this.canvasCtx.getImageData(0, 0, this.width*2, this.height*2);
+        
 
         if (this.convolver) {
           imageData = output = Filter.convolve(imageData, this.convolver.matrix);
@@ -648,7 +738,14 @@
           this.canvasCtx.putImageData(imageData, 0, 0);
         }
         var self = this;
-        setTimeout(function(){},10);
+        
+        
+          if (dataBuffer === -1) {
+            dataBuffer = [];
+          } else if (dataBuffer.length === 0) {
+            dataBuffer = output;  
+          }
+
         this.rfid =  window.requestAnimationFrame(self.draw.bind(self));
         
       },
@@ -714,6 +811,12 @@
             this.convolver = {
               type: convolver,
               matrix: [-2,-1,0,-1,1,1,0,1,2]
+            }
+            break;
+          case 'sobel':
+            this.convolver = {
+              type: convolver,
+              matrix: [-1,0,1,-2,0,2,-1,0,1]
             }
             break;
         }
