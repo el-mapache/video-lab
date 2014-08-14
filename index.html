@@ -607,13 +607,13 @@
       return document.createElement("canvas").getContext("2d").getImageData(0, 0, w, h);
     }
 
-    function ViewScreen(el, stream) {
+    function CanvasView(el, stream) {
       // Whether or not the view screen is receiving data.
       this.active = false;
       this.canvas = el;
-      this.canvasCtx = this.canvas.getContext('2d');
+      this.canvasContext = this.canvas.getContext('2d');
       this.stream = stream;
-      this.videoBacking = document.createElement('video');
+      this.backingVideo = document.createElement('video');
 
 
       this.height = this.canvas.height;
@@ -625,57 +625,107 @@
       this.canvas.style.width = this.width + 'px';
       this.canvas.style.height = this.height + 'px';
 
-      this.init();
+      this.initialize();
     }
 
-    ViewScreen.prototype.constructor = ViewScreen;
+    CanvasView.prototype.constructor = CanvasView;
     
-    ViewScreen.prototype.init = function() {
-      this.video.on('loadeddata', function() {
+    CanvasView.prototype.initialize = function() {
+      this.backingVideo.addEventListener('loadeddata', function() {
         
-        this.video.play();
-        this.rfid = window.requestAnimationFrame(this.draw.bind(this));
+        this.backingVideo.play();
+        this.trigger('ON_VIDEO_LOAD');
 
       }.bind(this));
 
-      this.video.src = window.URL.createObjectURL(this.stream);
+      this.backingVideo.src = window.URL.createObjectURL(this.stream);
+      this.active = true;
+      
+      VL.Events.prototype.attachTo(this);
+      
+      return this;
     };
 
-    ViewScreen.prototype.onBeforeDraw = function() {
-    };
-
-    ViewScreen.prototype.draw = function(time, imageData) {      
-      var i = 0;
-
+    CanvasView.prototype.draw = function(time, imageData) {
       if (!this.isActive()) {
-        return window.cancelAnimationFrame(this.rfid);
+        return false;
       }
 
-      this.canvasCtx.drawImage(this.videoBacking, 0, 0);
-      var output = imageData = this.canvasCtx.getImageData(0, 0, this.width*2, this.height*2);
+      this.canvasContext.drawImage(this.backingVideo, 0, 0);
+      var output = imageData = this.canvasContext.getImageData(0, 0, this.width*2, this.height*2);
       
 
-      if (this.convolver) {
-        imageData = output = Filter.convolve(imageData, this.convolver.matrix);
-      }
+      // if (this.convolver) {
+      //   imageData = output = Filter.convolve(imageData, this.convolver.matrix);
+      // }
 
-      if (this.filters.length != 0) {
-        while(i < this.filters.length) {
-          output.data = Filter[this.filters[i]](output);
-          i++;
-        }
+      // if (this.filters.length != 0) {
+      //   while(i < this.filters.length) {
+      //     output.data = Filter[this.filters[i]](output);
+      //     i++;
+      //   }
 
-        this.canvasCtx.putImageData(output, 0, 0);
-      } else {
-        this.canvasCtx.putImageData(imageData, 0, 0);
-      }
-
-      this.rfid =  window.requestAnimationFrame(this.draw.bind(this));
+      //  this.canvasCtx.putImageData(output, 0, 0);
+     // } else {
+      this.canvasContext.putImageData(imageData, 0, 0);
+      
+      return true;
     };
 
-    ViewScreen.prototype.isActive = function() {
+    CanvasView.prototype.isActive = function() {
       return this.active;
     };
+
+    function AppController() {
+      // sub view representing the canvas element
+      this.canvasView = null;
+      // subview representing the filter nodes
+      this.filtersView = null;
+
+      this.allowedAccessToCamera = false;
+
+      // Pointer to the id of the current animation frame
+      this.rfid = null;
+
+      this.initialize();
+    };
+
+    AppController.prototype.initialize = function() {
+      Services.UserMedia.getStream(this.onAfterStreamRequest.bind(this));
+    };
+
+    AppController.prototype.onAfterStreamRequest = function(stream) {
+      if (!stream) {
+        return console.log('User denied access to their webcam.');
+      }
+
+      this.allowedAccessToCamera = true;  
+      
+      this.canvasView = new CanvasView(document.querySelector('canvas'), stream);
+      this.canvasView.on('ON_VIDEO_LOAD', this.startAnimationLoop.bind(this));
+    };
+
+    AppController.prototype.startAnimationLoop = function() {
+      var self = this;
+
+      // TODO make this a two part process, query the canvas for data,
+      //transform it, and send it back to be painted.
+
+      function animationCallback() {
+        var shouldKeepDrawing = self.canvasView.draw();
+
+        if (!shouldKeepDrawing) {
+          window.cancelAnimationFrame(self.rfid);
+          self.rfid = null;
+          return;
+        }
+
+        self.rfid = window.requestAnimationFrame(animationCallback);
+      }
+
+      this.rfid = window.requestAnimationFrame(animationCallback);
+    };
+
 
     // Take a snapshot with your browser
     function PhotoBooth() {
@@ -927,7 +977,8 @@
     };
 
     if (Services.Browser.isChrome()) {
-      new PhotoBooth();
+      //new PhotoBooth();
+      new AppController();
     } else {
       alert("This page only supports Google Chrome, version 29 or higher.");
     }

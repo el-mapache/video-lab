@@ -4,12 +4,14 @@
 
   EventEmitter.prototype = {
     _events: {},
-    bind: function(event, fn) {
+    on: function(event, fn) {
+      this._events = this._events || {};
       this._events[event] = this._events[event] || [];
       this._events[event].push(fn);
     },
 
     unbind: function(event, fn) {
+      this._events = this._events || {};
       if (!event in this._events) return;
 
       var eventList = this._events[event];
@@ -18,6 +20,7 @@
     },
 
     trigger: function(event) {
+      this._events = this._events || {};
       var events = this._events[event];
 
       if (!events || events.length === 0) return;
@@ -26,13 +29,14 @@
       var len = events.length;
       
       while (ii < len) {
-        events[ii].apply(this, [].prototype.slice.call(arguments));
+        events[ii].apply(this, [].slice.call(arguments));
+        ii++;
       }
     },
 
     attachTo: function(destObject) {
-      var props = ['bind', 'unbind', 'trigger'];
-      var ii = 0;
+      var props = ['on', 'unbind', 'trigger'];
+      var ii = -1;
 
       while ((ii = ii + 1) < 3) {
         if ( typeof destObject === 'function' ) {
