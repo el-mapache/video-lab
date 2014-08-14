@@ -11,7 +11,6 @@
     ]
   }
 
-
   /*
    * Insanely basic function to allow the programmer to choose
    * between using setInterval or webkitRequestAnimationFrame.

@@ -14,15 +14,26 @@
       top:500px;
     }
   </style>
+  <script src="js/services.js"></script>
   <script src="js/util.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/test.js"></script>
 </head>
 <body>
   <video id="camera-input"></video>
   <canvas height="360" width="480"></canvas>
   <br>
+  <div style='float:right; margin-right:200px;'>
+    <div id='cc'></div>
+  </div>
   <div>
     <button id="snapshot">Take a Photo</button>
-    <button id="motion-blur">Blur</button>
+    <form name='canvas-blur' oninput="level.value = canvasBlur.valueAsNumber;">
+      <label for="canvasBlur">Blur</label>
+      <input type="range" min="0.0" max="1.0" step="0.1" id="canvasBlur" name="canvasBlur" value="1.0"/>
+      <output for="canvasBlur" name="level">1.0</output>
+    </form>
+
     <button id="stop">Stop</button>
 
     <br><br>
@@ -54,9 +65,8 @@
   </div>
 
   <script>
-   navigator.getUserMedia = navigator.getUserMedia ||
-                            navigator.webkitGetUserMedia ||
-                            navigator.mozGetUserMedia;
+    var contrast = new VL.Contrast(document.getElementById('cc')).render();
+    VL.Events.prototype.attachTo(contrast);
 
 
     var hdConstraints = {
@@ -100,24 +110,19 @@
       contrast_lookup[i] = newValue | 0;  
     }
 
-    // var gray = [];
-    // var iterator;
-    // for (iterator = 0; iterator < 256; iterator++) {
-    //   gray[r]
-      
-      
-    // }
+    var inversionLookup = {};
+
+    for (var i = 0; i < 256; i++) {
+      inversionLookup[i] = 255 - i;
+    }
 
     function grayscale(r,g,b) {
+      //3*r+4*g+b) >>> 3
       return (0.21 * r + 0.72 * g + 0.07 * b);
     }
 
     function compareNumbers(a,b) {
       return a - b;
-    }
-
-    function onError(error) {
-      console.log("getUserMedia encountered the following error: " + error);
     }
 
     var Filter = {
@@ -238,13 +243,7 @@
       },
 
       grayscale: function(imageData) {
-        /* The human eye is most sensitive to green, then red, then blue
-         * so each of the colors is weighted differently.
-         * The first 1 bit is shifted over three places the the right and
-         * excess bits are discarded.  This basically divides by 8 and rounds.
-         *
-         * Returns a weighted average of the colors
-        */
+        // Uses luminosity to computer gray.
         var l = imageData.data.length,
             data = imageData.data,
             i = 0,
@@ -255,7 +254,7 @@
           g = data[i+1];
           b = data[i+2];
 
-          data[i] = data[i+1] = data[i+2] = (0.21 * r + 0.72 * g + 0.07 * b);//3*r+4*g+b) >>> 3
+          data[i] = data[i+1] = data[i+2] = (0.21 * r + 0.72 * g + 0.07 * b);
         }
 
         return data
@@ -341,8 +340,7 @@
           r = data[i];
           g = data[i+1];
           b = data[i+2];
-
-          // >>> 3 divides the total by 8 and rounds down.
+          // Invert looks marignally better with this grayscale formula
           data[i] = data[i+1] = data[i+2] = ((3*r+4*g+b) >>> 3) >= threshold ? 255 : 0;
         }
 
@@ -354,10 +352,10 @@
             ii = 0,
             data = imageData.data;
 
-        for (ii; ii < length; ii += 4) {
-          data[ii] = 255 - data[ii];
-          data[ii + 1] = 255 - data[ii + 1];
-          data[ii + 2] = 255 - data[ii + 2];
+        while ((ii = ii + 4) < length) {
+          data[ii] = inversionLookup[data[ii]];
+          data[ii + 1] = inversionLookup[data[ii + 1]];
+          data[ii + 2] = inversionLookup[data[ii + 2]];
         }
 
         return data;
@@ -608,7 +606,76 @@
     function generateImageData(w, h) {
       return document.createElement("canvas").getContext("2d").getImageData(0, 0, w, h);
     }
+
+    function ViewScreen(el, stream) {
+      // Whether or not the view screen is receiving data.
+      this.active = false;
+      this.canvas = el;
+      this.canvasCtx = this.canvas.getContext('2d');
+      this.stream = stream;
+      this.videoBacking = document.createElement('video');
+
+
+      this.height = this.canvas.height;
+      this.width = this.canvas.width;
+
+      this.canvas.width = this.width * 2;
+      this.canvas.height = this.height * 2;
+
+      this.canvas.style.width = this.width + 'px';
+      this.canvas.style.height = this.height + 'px';
+
+      this.init();
+    }
+
+    ViewScreen.prototype.constructor = ViewScreen;
     
+    ViewScreen.prototype.init = function() {
+      this.video.on('loadeddata', function() {
+        
+        this.video.play();
+        this.rfid = window.requestAnimationFrame(this.draw.bind(this));
+
+      }.bind(this));
+
+      this.video.src = window.URL.createObjectURL(this.stream);
+    };
+
+    ViewScreen.prototype.onBeforeDraw = function() {
+    };
+
+    ViewScreen.prototype.draw = function(time, imageData) {      
+      var i = 0;
+
+      if (!this.isActive()) {
+        return window.cancelAnimationFrame(this.rfid);
+      }
+
+      this.canvasCtx.drawImage(this.videoBacking, 0, 0);
+      var output = imageData = this.canvasCtx.getImageData(0, 0, this.width*2, this.height*2);
+      
+
+      if (this.convolver) {
+        imageData = output = Filter.convolve(imageData, this.convolver.matrix);
+      }
+
+      if (this.filters.length != 0) {
+        while(i < this.filters.length) {
+          output.data = Filter[this.filters[i]](output);
+          i++;
+        }
+
+        this.canvasCtx.putImageData(output, 0, 0);
+      } else {
+        this.canvasCtx.putImageData(imageData, 0, 0);
+      }
+
+      this.rfid =  window.requestAnimationFrame(this.draw.bind(this));
+    };
+
+    ViewScreen.prototype.isActive = function() {
+      return this.active;
+    };
 
     // Take a snapshot with your browser
     function PhotoBooth() {
@@ -620,9 +687,6 @@
 
       // The booth itself
       this.canvas = document.querySelector("canvas");
-
-      // An in-memory canvas for convolution effects.
-      this.feed = document.createElement("canvas");
 
       // The video element playing our camera feed.
       this.video = document.getElementById("camera-input");
@@ -659,7 +723,7 @@
     PhotoBooth.prototype = {
       bindEvents: function() {
         document.getElementById("snapshot").addEventListener("click", this.takePhoto.bind(this));
-        document.getElementById("motion-blur").addEventListener("click", this.blur.bind(this));
+        document.getElementById("canvasBlur").addEventListener("input", this.blur.bind(this));
         document.getElementById("stop").addEventListener("click", this.toggleVideo.bind(this));
         var nodes = document.querySelectorAll(".filter")
 
@@ -683,33 +747,23 @@
         }
 
         this.shouldStore = !this.shouldStore;
-        
       },
 
       requestAccess: function() {
-        navigator.getUserMedia({
-          video: true
-        }, this._onAccessGranted.bind(this),
-           this._onAccessDenied.bind(this)
-        );
-      },
+        Services.UserMedia.getStream(function(stream) {
+          if (!stream) {
+            return console.log('No webcam acccess');
+          }
+          
+          new ViewScreen(document.querySelector('canvas'), stream);
+          this.stream = stream;
+          this.active = true;
+          this.allowedAccessToCamera = true;
 
-      _onAccessDenied: function() {
-        console.log('User denied access to the webcam.');
-      },
+          this.video.src = window.URL.createObjectURL(this.stream);
 
-      _onAccessGranted: function(localMediaStream) {
-        // State variables for the photo booth
-        this.stream = localMediaStream;
-        this.active = true;
-        this.allowedAccessToCamera = true;
-
-
-        // Local variables for drawing
-        var rfid = null;
-        this.video.src = window.URL.createObjectURL(this.stream);
-
-        this.video.addEventListener("loadeddata", this._onVideoDataReady.bind(this));
+          this.video.addEventListener('loadeddata', this._onVideoDataReady.bind(this));
+        }.bind(this));
       },
 
       draw: function(time) {
@@ -826,14 +880,14 @@
         return this.active && this.stream;
       },
 
-      blur: function() {
+      blur: function(event) {
         if (!this._isActive()) return false;
 
 
         var ctx = this.canvas.getContext("2d"),
             currentAlpha = ctx.globalAlpha;
 
-        ctx.globalAlpha = currentAlpha > 0.1 && currentAlpha < 0.2 ? 1.0 : 0.1;
+        ctx.globalAlpha = +event.target.value;
       },
 
       toggleVideo: function() {
@@ -872,7 +926,7 @@
       }
     };
 
-    if (chrome && /Chrome\/(2{1}9{1}|3{1}[0-9])/.test(navigator.appVersion)) {
+    if (Services.Browser.isChrome()) {
       new PhotoBooth();
     } else {
       alert("This page only supports Google Chrome, version 29 or higher.");
