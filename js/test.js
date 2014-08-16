@@ -10,11 +10,11 @@
     this.lookup = [];
 
     this.template = '<form onsubmit="return false;" oninput="level.value = contrast.valueAsNumber;">' + 
-                      '<input id="ctog" type="checkbox"><span  style="margin-right: 20px;">Toggle</span>' +
-                      '<label for="contrast">Contrast</label>' +
-                      '<input type="range" min="-100" max="100" id="contrast-filter" name="contrast" value="0"/>' +
-                      '<output style="margin-left: 20px; padding:14px;" for="contrast-filter" name="level">0</output>' +
-                    '</form>';
+      '<input id="ctog" type="checkbox"><span  style="margin-right: 20px;">Toggle</span>' +
+      '<label for="contrast">Contrast</label>' +
+      '<input type="range" min="-100" max="100" id="contrast-filter" name="contrast" value="0"/>' +
+      '<output style="margin-left: 20px; padding:14px;" for="contrast-filter" name="level">0</output>' +
+    '</form>';
 
     
 
@@ -40,10 +40,13 @@
         fromValue += 0.5;
         fromValue *= 255;
 
-        if (fromValue < 0)
+        if (fromValue < 0) {
           fromValue = 0;
-        if (fromValue > 255)
+        }
+
+        if (fromValue > 255) {
           fromValue = 255;
+        }
         this.lookup[i] = fromValue | 0;  
       }
     };
@@ -67,8 +70,10 @@
 
 
     this.buildLookup(0);
+
     this.filter = (function(lookup) {
       var lookup = lookup;
+
       return function(imageData) {
         var data = imageData.data;
         var length = data.length;

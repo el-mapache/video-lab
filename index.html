@@ -15,6 +15,7 @@
     }
   </style>
   <script src="js/services.js"></script>
+  <script src="js/collection.js"></script>
   <script src="js/util.js"></script>
   <script src="js/events.js"></script>
   <script src="js/test.js"></script>
@@ -35,7 +36,7 @@
     </form>
 
     <button id="stop">Stop</button>
-
+    <div class='filters'>
     <br><br>
     <input class="filter" type="checkbox" name="filter" value="grayscale">Grayscale<br>
     <input class="filter" type="checkbox" name="filter" value="invert">Invert<br>
@@ -53,12 +54,13 @@
     <input class="filter" type="checkbox" name="filter" value="burnO">burn or<br>
     <input class="filter" type="checkbox" name="filter" value="burnA">burn and<br>
 
-    <button class="convolver">Laplace</button>
-    <button class="convolver">Sobel</button>
-    <button class="convolver">Sharpen</button>
-    <button class="convolver">Blur</button>
-    <button class="convolver">Emboss</button>
-    <button class="convolver">Edge</button>
+    <button class="convolver" value='laplace'>Laplace</button>
+    <button class="convolver" value='sobel'>Sobel</button>
+    <button class="convolver" value='sharpen'>Sharpen</button>
+    <button class="convolver" value="blur">Blur</button>
+    <button class="convolver" value="emboss">Emboss</button>
+    <button class="convolver" value="edge">Edge</button>
+</div>
     <button id="reset">Reset</button>
 
     <button id='loop'>Store last second of video</button>
@@ -627,8 +629,6 @@
 
       this.initialize();
     }
-
-    CanvasView.prototype.constructor = CanvasView;
     
     CanvasView.prototype.initialize = function() {
       this.backingVideo.addEventListener('loadeddata', function() {
@@ -646,27 +646,21 @@
       return this;
     };
 
-    CanvasView.prototype.draw = function(time, imageData) {
+    CanvasView.prototype.getPixels = function() {
+      if (!this.isActive()) {
+        return null;
+      }
+
+      this.canvasContext.drawImage(this.backingVideo, 0, 0);
+      //return this.canvasContext.getImageData(0, 0, this.width, this.height);
+      return this.canvasContext.getImageData(0, 0, this.width*2, this.height*2);
+    };
+
+    CanvasView.prototype.draw = function(imageData) {
       if (!this.isActive()) {
         return false;
       }
 
-      this.canvasContext.drawImage(this.backingVideo, 0, 0);
-      var output = imageData = this.canvasContext.getImageData(0, 0, this.width*2, this.height*2);
-      
-
-      // if (this.convolver) {
-      //   imageData = output = Filter.convolve(imageData, this.convolver.matrix);
-      // }
-
-      // if (this.filters.length != 0) {
-      //   while(i < this.filters.length) {
-      //     output.data = Filter[this.filters[i]](output);
-      //     i++;
-      //   }
-
-      //  this.canvasCtx.putImageData(output, 0, 0);
-     // } else {
       this.canvasContext.putImageData(imageData, 0, 0);
       
       return true;
@@ -676,11 +670,137 @@
       return this.active;
     };
 
+    CanvasView.prototype.constructor = CanvasView;
+
+
+
+
+
+
+    function FilterView(el) {
+      this.el = el;
+
+      this.activeFilters = new VL.Collection();
+
+      var nodes = el.querySelectorAll(".filter")
+
+      for  (var i = 0; i < nodes.length; i++) {
+        nodes[i].addEventListener("click", this.addFilter.bind(this));
+      }
+
+      var convolvers = el.querySelectorAll(".convolver");
+
+      for  (var i = 0; i < convolvers.length; i++) {
+        convolvers[i].addEventListener("click", this.addFilter.bind(this));
+      }
+    }
+
+
+    FilterView.prototype.addFilter = function(evt) {
+      var filter;
+      
+      if (/convolver/.test(evt.target.className)) {
+        filter = this._buildConvolver(evt);
+      } else if (/filter/.test(evt.target.className)) {
+        filter = this._buildFilter(evt);
+      }
+
+      this.activeFilters.add(filter.name, filter);
+      
+      return this.activeFilters;
+    };
+
+
+    FilterView.prototype.process = function(imageData) {
+      function filterPixelData(filter) {
+        if (filter.type === 'convolver') {
+          imageData = Filter.convolve(imageData, filter.matrix);
+        } else if (filter.type === 'filter') {
+          imageData.data = Filter[filter.name](imageData);
+        }
+      }
+
+      this.activeFilters.each(filterPixelData);
+
+      return imageData;
+    };
+
+    FilterView.prototype._buildFilter = function(evt) {
+      var filter = evt.currentTarget.value;
+
+      return {
+        name: filter,
+        type: 'filter'
+      };
+    };
+
+    FilterView.prototype._buildConvolver = function(evt) {
+      var convolver = evt.currentTarget.value;
+
+
+      var filter;
+
+      // Todo make these models.
+      switch (convolver) {
+        case "laplace":
+          filter = {
+            name: convolver,
+            type: 'convolver',
+            matrix: [1,1,1,1,-8,1,1,1,1]
+          };
+          break;
+        case "sharpen":
+          filter = {
+            name: convolver,
+            type: 'convolver',
+            matrix: [0,-1,0,-1,5,-1,0,-1,0]
+          };
+          break;
+        case "blur":
+          var b = 1/9;
+          filter = {
+            name: convolver,
+            type: 'convolver',
+            matrix: [b,b,b,b,b,b,b,b,b]
+          };
+          break;
+        case "edge":
+          filter = {
+            name: convolver,
+            type: 'convolver',
+            matrix: [-6,-4,0,-10,10,1,0,4,6]
+          }
+          break;
+        case "emboss":
+          filter = {
+            name: convolver,
+            type: 'convolver',
+            matrix: [-2,-1,0,-1,1,1,0,1,2]
+          }
+          break;
+        case 'sobel':
+          filter = {
+            name: convolver,
+            type: 'convolver',
+            matrix: [-1,0,1,-2,0,2,-1,0,1]
+          }
+          break;
+      }
+
+      return filter;
+    };
+
+    FilterView.prototype.constructor = FilterView;
+
+
+
+
+
     function AppController() {
       // sub view representing the canvas element
       this.canvasView = null;
       // subview representing the filter nodes
-      this.filtersView = null;
+      this.filtersView = new FilterView(document.querySelector('.filters'));
 
       this.allowedAccessToCamera = false;
 
@@ -689,6 +809,7 @@
 
       this.initialize();
     };
+
 
     AppController.prototype.initialize = function() {
       Services.UserMedia.getStream(this.onAfterStreamRequest.bind(this));
@@ -705,6 +826,11 @@
       this.canvasView.on('ON_VIDEO_LOAD', this.startAnimationLoop.bind(this));
     };
 
+    AppController.prototype.transform = function(imageData) {
+      var data = this.filtersView.process(imageData);
+      return data;
+    };
+
     AppController.prototype.startAnimationLoop = function() {
       var self = this;
 
@@ -712,7 +838,8 @@
       //transform it, and send it back to be painted.
 
       function animationCallback() {
-        var shouldKeepDrawing = self.canvasView.draw();
+        var transformedData = self.transform(self.canvasView.getPixels()); 
+        var shouldKeepDrawing = self.canvasView.draw(transformedData);
 
         if (!shouldKeepDrawing) {
           window.cancelAnimationFrame(self.rfid);
