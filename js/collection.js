@@ -3,10 +3,9 @@
   root.VL = root.VL || {};
   
   var elements = {};
+  var _length = 0
 
-  function Collection() {
-    this.length = 0;
-  }
+  var Collection = function() {};
 
   Collection.prototype.add = function(key, value) {
     if (elements[key]) {
@@ -14,7 +13,9 @@
     }
 
     elements[key] = value;
-    this.length++;
+    _length++;
+
+    this.trigger('Collection:Add');
 
     return elements;
   };
@@ -23,7 +24,8 @@
     if (!elements[key]) return null;
 
     delete elements[key];
-    this.length--;
+    _length--;
+    this.trigger('Collection:Remove');
 
     return elements;
 
@@ -46,7 +48,13 @@
     return elements;
   };
 
+  Collection.prototype.length = function() {
+    return _length;
+  };
+
   Collection.prototype.constructor = Collection;
+
+  root.VL.Events.prototype.attachTo(Collection);
 
   root.VL.Collection = Collection;
 

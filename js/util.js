@@ -11,6 +11,16 @@
     ]
   }
 
+  function extend(dest, source) {
+    if (dest && source) {
+      for(var prop in source)  {
+        dest[prop] = source[prop];
+      }
+    }
+
+    return dest;
+  }
+
   /*
    * Insanely basic function to allow the programmer to choose
    * between using setInterval or webkitRequestAnimationFrame.

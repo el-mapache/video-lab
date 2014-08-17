@@ -14,11 +14,13 @@
       top:500px;
     }
   </style>
-  <script src="js/services.js"></script>
-  <script src="js/collection.js"></script>
   <script src="js/util.js"></script>
   <script src="js/events.js"></script>
+  <script src="js/services.js"></script>
+  <script src="js/collection.js"></script>
+  <script src="js/view.js"></script>
   <script src="js/test.js"></script>
+  <script src="js/views/GrayScaleView.js"></script>
 </head>
 <body>
   <video id="camera-input"></video>
@@ -631,6 +633,7 @@
     }
     
     CanvasView.prototype.initialize = function() {
+      document.getElementById("snapshot").addEventListener("click", this.takePhoto.bind(this));
       this.backingVideo.addEventListener('loadeddata', function() {
         
         this.backingVideo.play();
@@ -668,6 +671,21 @@
 
     CanvasView.prototype.isActive = function() {
       return this.active;
+    };
+
+    CanvasView.prototype.takePhoto = function(evt) {
+      var anchor, click;
+
+      anchor = document.createElement("a");
+      anchor.href = this.canvas.toDataURL("image/png");
+      
+      
+      anchor.download = "image"+ +new Date() + ".png";
+
+      click = document.createEvent("Event");
+      click.initEvent("click", true, true);
+
+      anchor.dispatchEvent(click);
     };
 
     CanvasView.prototype.constructor = CanvasView;
@@ -827,8 +845,7 @@
     };
 
     AppController.prototype.transform = function(imageData) {
-      var data = this.filtersView.process(imageData);
-      return data;
+      return this.filtersView.process(imageData);
     };
 
     AppController.prototype.startAnimationLoop = function() {

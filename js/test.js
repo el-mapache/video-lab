@@ -10,7 +10,7 @@
     this.lookup = [];
 
     this.template = '<form onsubmit="return false;" oninput="level.value = contrast.valueAsNumber;">' + 
-      '<input id="ctog" type="checkbox"><span  style="margin-right: 20px;">Toggle</span>' +
+      '<input id="ctog" type="checkbox"/>' +
       '<label for="contrast">Contrast</label>' +
       '<input type="range" min="-100" max="100" id="contrast-filter" name="contrast" value="0"/>' +
       '<output style="margin-left: 20px; padding:14px;" for="contrast-filter" name="level">0</output>' +
@@ -53,6 +53,7 @@
 
     this.bindEvents = function() {
       var self = this;
+      
       this.el.onclick = function(event) {
         if (event.target.id !== 'ctog') return;
         self.active = !self.active;
