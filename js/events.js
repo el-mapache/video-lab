@@ -4,10 +4,10 @@
 
   EventEmitter.prototype = {
     _events: {},
-    on: function(event, fn) {
+    on: function(event, fn, context) {
       this._events = this._events || {};
       this._events[event] = this._events[event] || [];
-      this._events[event].push(fn);
+      this._events[event].push({fn: fn, ctx: context || this});
     },
 
     unbind: function(event, fn) {
@@ -21,15 +21,27 @@
 
     trigger: function(event) {
       this._events = this._events || {};
-      var events = this._events[event];
-
-      if (!events || events.length === 0) return;
+      var events = this._events[event] || [];
       
       var ii = 0;
       var len = events.length;
       
+      var allEvents = this._events['all'];
+
+      if (allEvents) {
+        var iii = 0;
+        var length = allEvents.length;
+        while (iii < length) {
+          var e = allEvents[iii];
+
+          e.fn.apply(e.ctx, [].slice.call(arguments));
+          iii++;
+        }
+      }
+
       while (ii < len) {
-        events[ii].apply(this, [].slice.call(arguments));
+        var e = events[ii];
+        e.fn.apply(e.ctx, [].slice.call(arguments));
         ii++;
       }
     },

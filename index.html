@@ -14,6 +14,7 @@
   <script src="js/events.js"></script>
   <script src="js/services.js"></script>
   <script src="js/framework.js"></script>
+  <script src="js/collections/filter-collection.js"></script>
   <script src="js/models/grayscale-filter.js"></script>
   <script src="js/test.js"></script>
   <script src="js/views/GrayScaleView.js"></script>
@@ -69,10 +70,9 @@
     var contrast = new VL.Contrast(document.getElementById('cc')).render();
     VL.Events.prototype.attachTo(contrast);
     var f = new GrayscaleFilter();
+    var collection = new FilterCollection();
+    collection.add(f);
 
-    f.on('model.change.active', function(newVal, oldVal, model) {
-      console.log('howdy', arguments)
-    });
 
     gsv = new GrayScaleView({model: f}).render();
 
@@ -701,13 +701,21 @@
     function FilterView(el) {
       this.el = el;
 
-      this.activeFilters = new VL.Collection();
+      this.activeFilters = collection;//new VL.Collection();
+      this.filters = [];
 
-      var nodes = el.querySelectorAll(".filter")
-
-      for  (var i = 0; i < nodes.length; i++) {
-        nodes[i].addEventListener("click", this.addFilter.bind(this));
-      }
+     // var nodes = el.querySelectorAll(".filter")
+      var self = this;
+      this.activeFilters.on('model.change.active', function(evt, newVal,oldVal,model) {
+        if (newVal) {
+          self.addFilter(model);
+        } else {
+          //
+        }
+      });
+      // for  (var i = 0; i < nodes.length; i++) {
+      //   nodes[i].addEventListener("click", this.addFilter.bind(this));
+      // }
 
       var convolvers = el.querySelectorAll(".convolver");
 
@@ -717,31 +725,25 @@
     }
 
 
-    FilterView.prototype.addFilter = function(evt) {
-      var filter;
+    FilterView.prototype.addFilter = function(filter) {
+      this.filters.push(filter);
       
-      if (/convolver/.test(evt.target.className)) {
-        filter = this._buildConvolver(evt);
-      } else if (/filter/.test(evt.target.className)) {
-        filter = this._buildFilter(evt);
-      }
-
-      this.activeFilters.add(filter.name, filter);
-      
-      return this.activeFilters;
+      return this.filters;
     };
 
 
     FilterView.prototype.process = function(imageData) {
       function filterPixelData(filter) {
-        if (filter.type === 'convolver') {
+        if (filter.get('type') === 'convolver') {
           imageData = Filter.convolve(imageData, filter.matrix);
-        } else if (filter.type === 'filter') {
-          imageData.data = Filter[filter.name](imageData);
+        } else if (filter.get('type') === 'filter') {
+          imageData.data = filter.filter(imageData);
         }
       }
 
-      this.activeFilters.each(filterPixelData);
+      for (var i = 0; i < this.filters.length; i++) {
+        filterPixelData(this.filters[i]);
+      }
 
       return imageData;
     };

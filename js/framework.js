@@ -1,8 +1,5 @@
 (function(root) {
   root.VL = root.VL || {};
-  
-  var elements = {};
-  var _length = 0
 
   var Collection = function(options) {
     options = options || {};
@@ -12,32 +9,50 @@
 
   Utils.extend(Collection.prototype, {
     length: 0,
-    elements: {},
+    modelsLookup: {},
+    models: [],
 
     init: function() {},
 
-    add: function(key, value) {
-      if (this.elements[key]) {
-        return this.remove(key);
-      }
+    add: function(model) {
+      var lookup = this.modelsLookup;
+      
+      // The model is already in the collection.
+      if (lookup[model.id]) return this;
 
-      this.elements[key] = value;
+      // Add the model to the list of models.
+      this.models.push(model);
+
+      // Add an entry into the lookup table.
+      lookup[model.id] = this.length;
+
+      model.on('all', this._passModelEvent, this);
+
       this.length++;
 
       this.trigger('collection.add');
 
-      return this.elements;
+      return this;
     },
 
     remove: function(key) {
-      if (!this.elements[key]) return null;
+      return 'dont use me';
+    
+      //This requires more work to actually update the lookup table, etc
+      // Luckily i wont be removing anything yet.
 
-      delete this.elements[key];
-      this.length--;
-      this.trigger('collection.remove');
+      // if (!this.elements[key]) return null;
 
-      return this.elements;
+      // delete this.elements[key];
+      // this.length--;
+      // this.trigger('collection.remove');
 
+      // return this.elements;
+
+    },
+
+    at: function(index) {
+      return this.models[index] || null;
     },
 
     each: function(callback) {
@@ -49,12 +64,20 @@
       }
     },
 
-    get: function(key) {
-      return key ? this.elements[key] : this.getAll();
+    get: function(id) {
+      if (!id) {
+        return this.getAll();
+      }
+
+      return this.models[this.modelsLookup[id]];
     },
 
     getAll: function() {
-      return this.elements;
+      return this.models;
+    },
+
+    _passModelEvent: function(eventName, newVal, oldVal, model) {
+      this.trigger(eventName, newVal, oldVal, model);
     }
   });
 
