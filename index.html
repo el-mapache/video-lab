@@ -9,16 +9,12 @@
     canvas {
       background: transparent;
     }
-    #canvas-div button {
-      position:absolute;
-      top:500px;
-    }
   </style>
   <script src="js/util.js"></script>
   <script src="js/events.js"></script>
   <script src="js/services.js"></script>
-  <script src="js/collection.js"></script>
-  <script src="js/view.js"></script>
+  <script src="js/framework.js"></script>
+  <script src="js/models/grayscale-filter.js"></script>
   <script src="js/test.js"></script>
   <script src="js/views/GrayScaleView.js"></script>
 </head>
@@ -40,7 +36,8 @@
     <button id="stop">Stop</button>
     <div class='filters'>
     <br><br>
-    <input class="filter" type="checkbox" name="filter" value="grayscale">Grayscale<br>
+    <div id='grayscale'></div>
+    <!-- <input class="filter" type="checkbox" name="filter" value="grayscale">Grayscale<br> -->
     <input class="filter" type="checkbox" name="filter" value="invert">Invert<br>
     <input class="filter" type="checkbox" name="filter" value="threshold">Threshold<br>
     <input class="filter" type="checkbox" name="filter" value="brightness">Brightness<br>
@@ -71,7 +68,13 @@
   <script>
     var contrast = new VL.Contrast(document.getElementById('cc')).render();
     VL.Events.prototype.attachTo(contrast);
+    var f = new GrayscaleFilter();
 
+    f.on('model.change.active', function(newVal, oldVal, model) {
+      console.log('howdy', arguments)
+    });
+
+    gsv = new GrayScaleView({model: f}).render();
 
     var hdConstraints = {
       video: {
