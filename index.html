@@ -10,14 +10,26 @@
       background: transparent;
     }
   </style>
+
+  <script type="text/template" id="variable-filter">
+    <form oninput="level.value = {{filter.name}}.valueAsNumber;">
+      <input class="filter" type="checkbox" name="filter"/>{{filer.name}}
+      <input type="range" min="0" max="100" id="{{filter.name}}-filter" name="{{filter.name}}" value="{{filter.currentValue"/>
+      <output style="margin-left: 20px; padding:14px;" for="{{filter.name}}-filter" name="level">0</output>
+    </form>
+  </script>
+  
   <script src="js/util.js"></script>
   <script src="js/events.js"></script>
   <script src="js/services.js"></script>
   <script src="js/framework.js"></script>
   <script src="js/collections/filter-collection.js"></script>
   <script src="js/models/grayscale-filter.js"></script>
-  <script src="js/test.js"></script>
-  <script src="js/views/GrayScaleView.js"></script>
+  <script src="js/models/contrast-filter.js"></script>
+  <script src="js/models/brightness-filter.js"></script>
+  <script src="js/views/grayscale-view.js"></script>
+  <script src="js/views/contrast-view.js"></script>
+  <script src="js/views/brightness-view.js"></script>
 </head>
 <body>
   <video id="camera-input"></video>
@@ -28,20 +40,22 @@
   </div>
   <div>
     <button id="snapshot">Take a Photo</button>
-    <form name='canvas-blur' oninput="level.value = canvasBlur.valueAsNumber;">
+<!--     <form name='canvas-blur' oninput="level.value = canvasBlur.valueAsNumber;">
       <label for="canvasBlur">Blur</label>
       <input type="range" min="0.0" max="1.0" step="0.1" id="canvasBlur" name="canvasBlur" value="1.0"/>
       <output for="canvasBlur" name="level">1.0</output>
-    </form>
+    </form> -->
 
     <button id="stop">Stop</button>
     <div class='filters'>
     <br><br>
     <div id='grayscale'></div>
-    <!-- <input class="filter" type="checkbox" name="filter" value="grayscale">Grayscale<br> -->
+    <div id='contrast'></div>
+    <div id='brightness'></div>
+    
     <input class="filter" type="checkbox" name="filter" value="invert">Invert<br>
     <input class="filter" type="checkbox" name="filter" value="threshold">Threshold<br>
-    <input class="filter" type="checkbox" name="filter" value="brightness">Brightness<br>
+    
     <input class="filter" type="checkbox" name="filter" value="saturate">saturate<br>
     <input class="filter" type="checkbox" name="filter" value="contrast">contrast<br>
     <input class="filter" type="checkbox" name="filter" value="sepia">Sepia<br>
@@ -67,14 +81,20 @@
   </div>
 
   <script>
-    var contrast = new VL.Contrast(document.getElementById('cc')).render();
-    VL.Events.prototype.attachTo(contrast);
-    var f = new GrayscaleFilter();
     var collection = new FilterCollection();
-    collection.add(f);
+    
+    var gsf = new GrayscaleFilter;
+    var cf = new ContrastFilter;
+    var bf = new BrightnessFilter;
+
+    collection.add(gsf);
+    collection.add(cf);
+    collection.add(bf);
 
 
-    gsv = new GrayScaleView({model: f}).render();
+    gsv = new GrayscaleView({model: gsf}).render();
+    cfv = new ContrastView({model: cf}).render();
+    bfv = new BrightnessView({model: bf}).render();
 
     var hdConstraints = {
       video: {
@@ -96,26 +116,6 @@
 
     var dataBuffer = -1;
 
-    var contrast_lookup = {};
-    var newValue = 0;
-    c = (100.0 + 24) / 100.0;
-
-    c *= c;
-
-    for (var i = 0; i < 256; i++) {
-      newValue = i;
-      newValue = newValue / 255.0;
-      newValue -= 0.5;
-      newValue *= c;
-      newValue += 0.5;
-      newValue *= 255;
-
-      if (newValue < 0)
-        newValue = 0;
-      if (newValue > 255)
-        newValue = 255;
-      contrast_lookup[i] = newValue | 0;  
-    }
 
     var inversionLookup = {};
 
@@ -222,51 +222,6 @@
         return data;
       },
 
-      contrast: function(imageData, contrast) {      
-        var data = imageData.data;
-        var length = data.length;
-        var r,g,b;
-        var i = 0;
-        // contrast = 12;
-
-        // contrast = (contrast + 100.0)/100.0;
-        // contrast *= contrast;
-
-        for( i; i < length; i = i + 4) {
-          // r = data[i] / 255.0;
-          // g = data[i+1] / 255.0;
-          // b = data[i+2] / 255.0;
-          
-          // r =   (((r - 0.5) * contrast) + 0.5) * 255;
-          // g = (((g - 0.5) * contrast) + 0.5) * 255;
-          // b =  (((b - 0.5) * contrast) + 0.5) * 255;
-
-          data[i] =   contrast_lookup[data[i]]//r < 0 ? 0 : r > 255 ? 255 : r | 0;
-          data[i+1] = contrast_lookup[data[i+1]]//g < 0 ? 0 : g > 255 ? 255 : g | 0;
-          data[i+2] =  contrast_lookup[data[i+2]]//b < 0 ? 0 : b > 255 ? 255 : b | 0;
-        }
-
-        return data;
-      },
-
-      grayscale: function(imageData) {
-        // Uses luminosity to computer gray.
-        var l = imageData.data.length,
-            data = imageData.data,
-            i = 0,
-            r,g,b;
-
-        for (i; i < l; i += 4) {
-          r = data[i];
-          g = data[i+1];
-          b = data[i+2];
-
-          data[i] = data[i+1] = data[i+2] = (0.21 * r + 0.72 * g + 0.07 * b);
-        }
-
-        return data
-      },
-
       burnX: function(imageData) {
         var l = imageData.data.length,
             data = imageData.data,
@@ -363,22 +318,6 @@
           data[ii] = inversionLookup[data[ii]];
           data[ii + 1] = inversionLookup[data[ii + 1]];
           data[ii + 2] = inversionLookup[data[ii + 2]];
-        }
-
-        return data;
-      },
-
-      brightness: function(imageData, lum) {
-        var length = imageData.data.length,
-            ii = 0,
-            data = imageData.data;
-
-        lum = lum || 22;
-
-        for (ii; ii < length; ii += 4) {
-          data[ii] = data[ii] + lum;
-          data[ii + 1] = data[ii + 1] + lum;
-          data[ii + 2] = data[ii + 2] + lum;
         }
 
         return data;
@@ -746,15 +685,6 @@
       }
 
       return imageData;
-    };
-
-    FilterView.prototype._buildFilter = function(evt) {
-      var filter = evt.currentTarget.value;
-
-      return {
-        name: filter,
-        type: 'filter'
-      };
     };
 
     FilterView.prototype._buildConvolver = function(evt) {

@@ -1,8 +1,9 @@
 var GrayscaleFilter = VL.Model.extend({
   defaults: {
-    'name':   'grayscale',
-    'type':   'filter',
-    'active':  false,
+    'name':      'grayscale',
+    'type':      'filter',
+    'active':    false,
+    'potential': 'fixed'
   },
 
   filter: function(imageData) {

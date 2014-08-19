@@ -230,9 +230,9 @@
     }
 
 
-    var Temp = function() {this.constructor = child;};
-    Temp.prototype = parent.prototype;
-    child.prototype = new Temp;
+    var Parent = function() {this.constructor = child;};
+    Parent.prototype = parent.prototype;
+    child.prototype = new Parent;
     
     Utils.extend(child.prototype, proto);
 

@@ -6,9 +6,10 @@ var Services = {
     var hasRequestedAccess = false;
 
     function getUserMedia(opts, onSuccess, onError) {
-      navigator.getUserMedia = navigator.getUserMedia ||
-        navigator.webkitGetUserMedia ||
-        navigator.mozGetUserMedia;
+      navigator.getUserMedia = navigator.mozGetUserMedia    || 
+                               navigator.webkitGetUserMedia ||
+                               navigator.getUserMedia;
+        
 
       navigator.getUserMedia(opts, onSuccess, onError);
     }
