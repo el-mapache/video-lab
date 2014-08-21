@@ -1,13 +1,10 @@
 var ContrastView = VL.View.extend({
 	el: '#contrast',
-	template: '<form oninput="level.value = contrast.valueAsNumber;">' +
-              '<input class="filter" type="checkbox" name="filter"/>Contrast' +
-              '<input type="range" min="-100" max="100" id="contrast-filter" name="contrast" value="24"/>' +
-              '<output style="margin-left: 20px; padding:14px;" for="contrast-filter" name="level">0</output>' +
-            '</form>',	
+	template: document.getElementById('variable-filter').innerHTML,
 
 	init: function(options) {
 		this.model = options.model;
+    console.log(this.model.attributes)
 	},
 
 	events: {
@@ -16,12 +13,11 @@ var ContrastView = VL.View.extend({
 	},
 
 	render: function() {
-		this.el.innerHTML = this.template;
+		this.el.innerHTML = doT.compile(this.template)(this.model.data());
 		return this;
 	},
 
 	toggleFilter: function(event) {
-    console.log('hey')
 		this.model.set('active', event.target.checked);
 	},
 

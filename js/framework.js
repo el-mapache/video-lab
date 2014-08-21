@@ -90,20 +90,22 @@
 
   var Model = function(options) {
     this.id = 'model' + uniqueId();
+    this.attributes = {};
+
     this._buildAttributes();
     this.init.apply(this, arguments);
   };
 
   Utils.extend(Model.prototype, {
-    attributes: {},
-
-    init: function() {},
+    init: function(options) {},
 
     set: function(prop, value) {
       var attrs = this.attributes;
 
       if (!attrs.hasOwnProperty(prop)) return;
 
+      // Stpre a reference to the previous value to determine whether a 
+      // 'change' event should fire.
       var old = attrs[prop];
 
       attrs[prop] = value;
@@ -124,7 +126,7 @@
     },
 
     _buildAttributes: function() {
-      var defaults = this.defaults;
+      var defaults = Utils.extend({}, this.defaults);
 
       if (!defaults || typeof defaults !== 'object') {
         return;

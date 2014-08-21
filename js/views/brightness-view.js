@@ -1,10 +1,6 @@
 var BrightnessView = VL.View.extend({
 	el: '#brightness',
-	template: '<form oninput="level.value = brightness.valueAsNumber;">' +
-              '<input class="filter" type="checkbox" name="filter"/>Brightness' +
-              '<input type="range" min="0" max="100" id="brightness-filter" name="brightness" value="40"/>' +
-              '<output style="margin-left: 20px; padding:14px;" for="brightness-filter" name="level">0</output>' +
-            '</form>',	
+	template: document.getElementById('variable-filter').innerHTML,
 
 	init: function(options) {
 		this.model = options.model;
@@ -16,7 +12,7 @@ var BrightnessView = VL.View.extend({
 	},
 
 	render: function() {
-		this.el.innerHTML = this.template;
+		this.el.innerHTML = doT.compile(this.template)(this.model.data());
 		return this;
 	},
 

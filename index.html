@@ -12,13 +12,18 @@
   </style>
 
   <script type="text/template" id="variable-filter">
-    <form oninput="level.value = {{filter.name}}.valueAsNumber;">
-      <input class="filter" type="checkbox" name="filter"/>{{filer.name}}
-      <input type="range" min="0" max="100" id="{{filter.name}}-filter" name="{{filter.name}}" value="{{filter.currentValue"/>
-      <output style="margin-left: 20px; padding:14px;" for="{{filter.name}}-filter" name="level">0</output>
+    <form oninput="level.value = {{=it.name}}.valueAsNumber;">
+      <input class="filter" type="checkbox" name="filter"/>{{=it.name}}
+      <input type="range" min="0" max="100" id="{{=it.name}}-filter" name="{{=it.name}}" value="{{=it.currentValue}}"/>
+      <output style="margin-left: 20px; padding:14px;" for="{{=it.name}}-filter" name="level">{{=it.currentValue}}</output>
     </form>
   </script>
+
+  <script type="text/template" id="fixed-filter">
+    <input class="filter" type="checkbox" name="filter" value="{{=it.name}}">{{=it.name}}<br>
+  </script>
   
+  <script src='dot.js'></script>
   <script src="js/util.js"></script>
   <script src="js/events.js"></script>
   <script src="js/services.js"></script>
@@ -83,9 +88,9 @@
   <script>
     var collection = new FilterCollection();
     
-    var gsf = new GrayscaleFilter;
-    var cf = new ContrastFilter;
-    var bf = new BrightnessFilter;
+    var gsf = new GrayscaleFilter();
+    var bf = new BrightnessFilter();
+    var cf = new ContrastFilter();
 
     collection.add(gsf);
     collection.add(cf);

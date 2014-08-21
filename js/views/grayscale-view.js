@@ -1,6 +1,6 @@
 var GrayscaleView = VL.View.extend({
 	el: '#grayscale',
-	template: '<input class="filter" type="checkbox" name="filter" value="grayscale">Grayscale<br>',
+	template: document.getElementById('fixed-filter').innerHTML,
 	
 
 	init: function(options) {
@@ -12,7 +12,7 @@ var GrayscaleView = VL.View.extend({
 	},
 
 	render: function() {
-		this.el.innerHTML = this.template;
+		this.el.innerHTML = doT.compile(this.template)(this.model.data());
 		return this;
 	},
 
