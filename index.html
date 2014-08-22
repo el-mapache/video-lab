@@ -14,7 +14,7 @@
   <script type="text/template" id="variable-filter">
     <form oninput="level.value = {{=it.name}}.valueAsNumber;">
       <input class="filter" type="checkbox" name="filter"/>{{=it.name}}
-      <input type="range" min="0" max="100" id="{{=it.name}}-filter" name="{{=it.name}}" value="{{=it.currentValue}}"/>
+      <input type="range" min="{{=it.min}}" max="{{=it.max}}" id="{{=it.name}}-filter" name="{{=it.name}}" value="{{=it.currentValue}}" step="{{=it.step}}"/>
       <output style="margin-left: 20px; padding:14px;" for="{{=it.name}}-filter" name="level">{{=it.currentValue}}</output>
     </form>
   </script>
@@ -23,18 +23,25 @@
     <input class="filter" type="checkbox" name="filter" value="{{=it.name}}">{{=it.name}}<br>
   </script>
   
-  <script src='dot.js'></script>
+  <script src='js/dot.js'></script>
   <script src="js/util.js"></script>
-  <script src="js/events.js"></script>
   <script src="js/services.js"></script>
   <script src="js/framework.js"></script>
   <script src="js/collections/filter-collection.js"></script>
   <script src="js/models/grayscale-filter.js"></script>
   <script src="js/models/contrast-filter.js"></script>
   <script src="js/models/brightness-filter.js"></script>
+  <script src="js/models/saturation-filter.js"></script>
+  <script src="js/models/inversion-filter.js"></script>
+  <script src="js/models/sepia-filter.js"></script>
+  <script src="js/models/emboss-filter.js"></script>
   <script src="js/views/grayscale-view.js"></script>
   <script src="js/views/contrast-view.js"></script>
   <script src="js/views/brightness-view.js"></script>
+  <script src="js/views/saturation-view.js"></script>
+  <script src="js/views/inversion-view.js"></script>
+  <script src="js/views/sepia-view.js"></script>
+  <script src="js/views/emboss-view.js"></script>
 </head>
 <body>
   <video id="camera-input"></video>
@@ -57,9 +64,13 @@
     <div id='grayscale'></div>
     <div id='contrast'></div>
     <div id='brightness'></div>
+    <div id='saturation'></div>
+    <div id='invert'></div>
+    <div id='sepia'></div>
+    <div id='emboss'></div>
     
-    <input class="filter" type="checkbox" name="filter" value="invert">Invert<br>
-    <input class="filter" type="checkbox" name="filter" value="threshold">Threshold<br>
+    
+<!--     <input class="filter" type="checkbox" name="filter" value="threshold">Threshold<br>
     
     <input class="filter" type="checkbox" name="filter" value="saturate">saturate<br>
     <input class="filter" type="checkbox" name="filter" value="contrast">contrast<br>
@@ -71,7 +82,7 @@
     <input class="filter" type="checkbox" name="filter" value="emboss">emboss<br>
     <input class="filter" type="checkbox" name="filter" value="burnX">burn xor<br>
     <input class="filter" type="checkbox" name="filter" value="burnO">burn or<br>
-    <input class="filter" type="checkbox" name="filter" value="burnA">burn and<br>
+    <input class="filter" type="checkbox" name="filter" value="burnA">burn and<br> -->
 
     <button class="convolver" value='laplace'>Laplace</button>
     <button class="convolver" value='sobel'>Sobel</button>
@@ -91,15 +102,21 @@
     var gsf = new GrayscaleFilter();
     var bf = new BrightnessFilter();
     var cf = new ContrastFilter();
+    var sf = new SaturationFilter();
+    var ivf = new InversionFilter();
+    var spf = new SepiaFilter();
+    var ef = new EmbossFilter();
 
-    collection.add(gsf);
-    collection.add(cf);
-    collection.add(bf);
+    collection.add([gsf, cf, bf, sf, ivf, spf, ef]);
 
 
     gsv = new GrayscaleView({model: gsf}).render();
     cfv = new ContrastView({model: cf}).render();
     bfv = new BrightnessView({model: bf}).render();
+    sfv = new SaturationView({model: sf}).render();
+    ivfv = new InversionView({model: ivf}).render();
+    spfv = new SepiaView({model: spf}).render();
+    new EmbossView({model: ef}).render();
 
     var hdConstraints = {
       video: {
@@ -120,13 +137,6 @@
     };
 
     var dataBuffer = -1;
-
-
-    var inversionLookup = {};
-
-    for (var i = 0; i < 256; i++) {
-      inversionLookup[i] = 255 - i;
-    }
 
     function grayscale(r,g,b) {
       //3*r+4*g+b) >>> 3
@@ -200,32 +210,6 @@
         return output;
       },
 
-      saturate: function(imageData, change) {
-        var PR = 0.299;
-        var PG = 0.587;
-        var PB = 0.114;
-
-        change = change || 2;
-
-        var data = imageData.data;
-        var length = data.length;
-        var r,g,b;
-        var i = 0;
-
-        for(i; i < length; i += 4) {
-          r = data[i];
-          g = data[i+1];
-          b = data[i+2];
-
-          var p = Math.sqrt( ((r*r) * PR) + ((g*g) * PG) + ((b*b) * PB) );
-
-          data[i] =   p + (r-p) * change;
-          data[i+1] = p + (g-p) * change;
-          data[i+2] = p + (b-p) * change;
-        }
-
-        return data;
-      },
 
       burnX: function(imageData) {
         var l = imageData.data.length,
@@ -312,52 +296,6 @@
         }
 
         return data;
-      },
-
-      invert: function(imageData) {
-        var length = imageData.data.length,
-            ii = 0,
-            data = imageData.data;
-
-        while ((ii = ii + 4) < length) {
-          data[ii] = inversionLookup[data[ii]];
-          data[ii + 1] = inversionLookup[data[ii + 1]];
-          data[ii + 2] = inversionLookup[data[ii + 2]];
-        }
-
-        return data;
-      },
-
-      sepia: function(imageData) {
-        var data = imageData.data;
-        var length = data.length;
-        var ii = 0;
-
-        for (ii; ii < length; ii += 4) {
-          var r = data[ii];
-          var g = data[ii+1];
-          var b = data[ii+2];
-
-          data[ii] = ((r * 0.393) + (g * 0.769) + (b * 0.189)) | 0;
-          data[ii+1] = ((r * 0.349) + (g * 0.686) + (b * 0.168)) | 0;
-          data[ii+2] = ((r * 0.272) + (g * 0.534) + (b * 0.131)) | 0;
-        }
-        return data;
-      },
-
-      emboss: function(imageData) {
-        var w = imageData.width;
-        var data = imageData.data;
-        var length = data.length;
-        var i = 0;
-
-        for (i; i < length; ++i) {
-          if ( (i & 3) == 3 ) continue;
-
-          data[i] = 125 + (data[i] << 1) - data[i + 4] - data[i + (w << 2)];
-        }
-
-        return imageData;
       },
 
       // Perform some gameboy era pixelations
@@ -552,11 +490,6 @@
       }
     };
 
-    // Takes width and height, returns an empty image data array for
-    // processing.
-    function generateImageData(w, h) {
-      return document.createElement("canvas").getContext("2d").getImageData(0, 0, w, h);
-    }
 
     function CanvasView(el, stream) {
       // Whether or not the view screen is receiving data.
@@ -645,10 +578,10 @@
     function FilterView(el) {
       this.el = el;
 
-      this.activeFilters = collection;//new VL.Collection();
+      this.activeFilters = collection;
       this.filters = [];
 
-     // var nodes = el.querySelectorAll(".filter")
+     
       var self = this;
       this.activeFilters.on('model.change.active', function(evt, newVal,oldVal,model) {
         if (newVal) {
@@ -657,9 +590,8 @@
           //
         }
       });
-      // for  (var i = 0; i < nodes.length; i++) {
-      //   nodes[i].addEventListener("click", this.addFilter.bind(this));
-      // }
+     
+
 
       var convolvers = el.querySelectorAll(".convolver");
 
@@ -678,11 +610,11 @@
 
     FilterView.prototype.process = function(imageData) {
       function filterPixelData(filter) {
-        if (filter.get('type') === 'convolver') {
-          imageData = Filter.convolve(imageData, filter.matrix);
-        } else if (filter.get('type') === 'filter') {
+        // if (filter.get('type') === 'convolver') {
+        //   imageData = Filter.convolve(imageData, filter.matrix);
+        // } else if (filter.get('type') === 'filter') {
           imageData.data = filter.filter(imageData);
-        }
+       // }
       }
 
       for (var i = 0; i < this.filters.length; i++) {

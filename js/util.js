@@ -28,7 +28,17 @@
     return dest;
   };
 
+  var forEach = function(list, callback) {
+    var ii = -1;
+    var length = list.length;
+
+    while (++ii < length) {
+      callback(list[ii], ii, list);
+    }
+  };
+
   root.Utils.extend = extend;
+  root.Utils.forEach = forEach;
 }(window))
 
 

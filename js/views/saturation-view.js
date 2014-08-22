@@ -1,5 +1,5 @@
-var ContrastView = VL.View.extend({
-	el: '#contrast',
+var SaturationView = VL.View.extend({
+	el: '#saturation',
 	template: document.getElementById('variable-filter').innerHTML,
 
 	init: function(options) {
@@ -7,8 +7,8 @@ var ContrastView = VL.View.extend({
 	},
 
 	events: {
-	  '.filter click': 'toggleFilter',
-    '#contrast-filter change': 'changeModelValue'
+		'.filter click': 'toggleFilter',
+    '#saturation-filter change': 'changeModelValue'
 	},
 
 	render: function() {

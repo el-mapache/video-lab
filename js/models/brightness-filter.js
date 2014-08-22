@@ -4,6 +4,9 @@ var BrightnessFilter = VL.Model.extend({
     'type':        'filter',
     'active':       false,
     'potential':    'variable',
+    'min':          0,
+    'max':          100,
+    'step':         1,
     'currentValue': 40
   },
 

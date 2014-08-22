@@ -1,5 +1,69 @@
 (function(root) {
   root.VL = root.VL || {};
+  
+  var EventEmitter = function() {};
+
+  EventEmitter.prototype = {
+    _events: {},
+    on: function(event, fn, context) {
+      this._events = this._events || {};
+      this._events[event] = this._events[event] || [];
+      this._events[event].push({fn: fn, ctx: context || this});
+    },
+
+    unbind: function(event, fn) {
+      this._events = this._events || {};
+      if (!event in this._events) return;
+
+      var eventList = this._events[event];
+
+      fn ? eventList.splice(eventList.indexOf(fn), 1) : eventList = null;
+    },
+
+    trigger: function(event) {
+      this._events = this._events || {};
+      var events = this._events[event] || [];
+      
+      var ii = 0;
+      var len = events.length;
+      
+      var allEvents = this._events['all'];
+
+      if (allEvents) {
+        var iii = 0;
+        var length = allEvents.length;
+        while (iii < length) {
+          var e = allEvents[iii];
+
+          e.fn.apply(e.ctx, [].slice.call(arguments));
+          iii++;
+        }
+      }
+
+      while (ii < len) {
+        var e = events[ii];
+        e.fn.apply(e.ctx, [].slice.call(arguments));
+        ii++;
+      }
+    },
+
+    attachTo: function(destObject) {
+      var props = ['on', 'unbind', 'trigger'];
+      var ii = -1;
+
+      while ((ii = ii + 1) < 3) {
+        if ( typeof destObject === 'function' ) {
+          destObject.prototype[props[ii]]  = this[props[ii]];
+        } else {
+          destObject[props[ii]] = this[props[ii]];
+        }
+      }
+    }
+  };
+
+  root.VL.Events = EventEmitter;
+
+
 
   var Collection = function(options) {
     options = options || {};
@@ -14,24 +78,11 @@
 
     init: function() {},
 
-    add: function(model) {
-      var lookup = this.modelsLookup;
+    add: function(models) {
+      models = models instanceof Array ? models : [models];
       
-      // The model is already in the collection.
-      if (lookup[model.id]) return this;
-
-      // Add the model to the list of models.
-      this.models.push(model);
-
-      // Add an entry into the lookup table.
-      lookup[model.id] = this.length;
-
-      model.on('all', this._passModelEvent, this);
-
-      this.length++;
-
-      this.trigger('collection.add');
-
+      Utils.forEach(models, this._addModel.bind(this));
+      
       return this;
     },
 
@@ -78,6 +129,25 @@
 
     _passModelEvent: function(eventName, newVal, oldVal, model) {
       this.trigger(eventName, newVal, oldVal, model);
+    },
+
+    _addModel: function(model, index) {
+      // The model is already in the collection.
+      if (this.modelsLookup[model.id]) {
+        return;
+      }
+
+      // Add the model to the list of models.
+      this.models.push(model);
+
+      // Add an entry into the lookup table.
+      this.modelsLookup[model.id] = this.length;
+
+      model.on('all', this._passModelEvent, this);
+
+      this.length++;
+
+      this.trigger('collection.add');
     }
   });
 

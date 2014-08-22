@@ -4,6 +4,9 @@ var ContrastFilter = VL.Model.extend({
     'type':        'filter',
     'active':       false,
     'potential':    'variable',
+    'max':          100,
+    'min':          -100,
+    'step':         1,
     'currentValue': 24
   },
 
