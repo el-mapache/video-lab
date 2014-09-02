@@ -107,6 +107,53 @@
       
       
     // }
+    
+    /* The first function sorts integer elements with the same signs:*/
+    function BitwiseSort(array, length) {
+      var n = length;
+      var A0 = [];
+      var A1 = [];
+      
+      // size of a javascript number less the sign bit.
+      // assumes all numbers are positive.
+      var tminus = 31;
+      /* A0 remembers the elements for which the k-th bit is 0 */
+      /* A1 remembers the elements for which the k-th bit is 1 */
+      var n0; // size of A0
+      var n1; // size of A1
+      var k = 20;
+      while (++k < 31) {
+        /* k - number of the bit The numeration starts from 0. Does not check the sign bit */
+        n0=0;
+        n1=0;
+        for (var i=0; i<n; ++i) {
+          /* checks the k-th bit of the i-th element of the array: */
+          if (array[i] & (1<<k)) {
+            A1[n1] = array[i];
+            ++n1;
+          } else {
+            A0[n0] = array[i];
+            ++n0;
+          }
+        }
+        //  We merge the two arrays. As a result we obtain an array
+        //   whose elements if the k-th bit is equal to 0 are at the beginning,
+        //   and if it is equal to 1 at the end. 
+        for (var i=0; i<n0; ++i) {
+          array[i] = A0[i];
+        }
+
+        for (var i=0; i<n1; ++i) {
+          array[n0+i] = A1[i];
+        }
+      }
+
+      return array[array.length - 1] >> 1;
+    } 
+      
+      
+  
+
 
     function grayscale(r,g,b) {
       return (0.21 * r + 0.72 * g + 0.07 * b);
@@ -592,6 +639,8 @@
               }
             }
 
+            //var color = BitwiseSort(neighbors, neighbors.length);
+            //var color = neighbors[((neighbors.length - 1)  >> 1) | 0];
             var color = neighbors.sort(compareNumbers)[((neighbors.length - 1)  >> 1) | 0];
 
             dstPixels[dstOffset] = color >> 24 & 0xff;
