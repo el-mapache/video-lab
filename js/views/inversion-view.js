@@ -1,4 +1,4 @@
-var InversionView = VL.View.extend({
+var InversionView = FilterView.extend({
 	el: '#invert',
 	template: document.getElementById('fixed-filter').innerHTML,
 

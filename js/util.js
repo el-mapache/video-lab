@@ -20,7 +20,7 @@
 
     while (args.length != 0) {
       var source = args.shift();
-      for(var prop in source)  {
+      for (var prop in source)  {
         dest[prop] = source[prop];
       }
     }

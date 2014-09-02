@@ -205,6 +205,7 @@
       Utils.extend(this.attributes, defaults);
     },
 
+    // Return a copy of the model's attributes as a javascript object
     data: function() {
       return Utils.extend({}, this.attributes);
     }
@@ -263,12 +264,16 @@
           throw new Error('Method not found on view.');
         }
 
+        // An event pair is comprised of a selector, followed by 
+        // the name of the event to lsiten for.
         var eventPair = event.split(' ');
+
         var selector = eventPair[0];
         var eventName = eventPair[1];
 
         this._onEvent(this.el, selector, eventName, method);
       }
+      return this;
     },
 
     _onEvent: function(parent, target, eventName, callback) {
@@ -278,7 +283,7 @@
         }
       }
 
-      this.el.addEventListener(eventName, isEventTarget.bind(this));
+      parent.addEventListener(eventName, isEventTarget.bind(this));
     }
   });
   
@@ -289,7 +294,7 @@
 
 
   /* Helpers */
-  var extend = function(proto) {
+  var extend = function(proto, staticP) {
     var parent = this;
     var child;
 
@@ -302,11 +307,16 @@
     }
 
 
-    var Parent = function() {this.constructor = child;};
-    Parent.prototype = parent.prototype;
-    child.prototype = new Parent;
+    var Ancestor = function() {
+      this.constructor = child;
+    };
+
+    Ancestor.prototype = parent.prototype;
+    child.prototype = new Ancestor;
     
-    Utils.extend(child.prototype, proto);
+    if (proto) {
+      Utils.extend(child.prototype, proto, staticP);
+    }
 
     return child;
   };
@@ -321,9 +331,7 @@
     };
   }());
 
-  root.VL.View.extend = extend;
-  root.VL.Model.extend = extend;
-  root.VL.Collection.extend = extend;
+  View.extend = Model.extend = Collection.extend = extend;
 
   return root;
 }(window));

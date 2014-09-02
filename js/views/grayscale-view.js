@@ -1,7 +1,6 @@
-var GrayscaleView = VL.View.extend({
+var GrayscaleView = FilterView.extend({
 	el: '#grayscale',
 	template: document.getElementById('fixed-filter').innerHTML,
-	
 
 	init: function(options) {
 		this.model = options.model;

@@ -4,7 +4,7 @@ var BrightnessFilter = VL.Model.extend({
     'type':        'filter',
     'active':       false,
     'potential':    'variable',
-    'min':          0,
+    'min':          -100,
     'max':          100,
     'step':         1,
     'currentValue': 40
@@ -21,9 +21,9 @@ var BrightnessFilter = VL.Model.extend({
     var data = imageData.data;
     
     var length = data.length;
-    var ii = 0;
+    var ii = -4;
 
-    for (ii; ii < length; ii += 4) {
+    while ((ii = ii + 4) < length) {
       data[ii]   = this.lookup[data[ii]];
       data[ii+1] = this.lookup[data[ii+1]];
       data[ii+2] = this.lookup[data[ii+2]];
@@ -38,10 +38,6 @@ var BrightnessFilter = VL.Model.extend({
     for (var ii = 0; ii < 256; ii++) {
 
       output = ii + value;
-
-      if (output > 255) {
-        output = 255;
-      }
 
       this.lookup[ii] = output;  
     }

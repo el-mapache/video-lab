@@ -14,7 +14,7 @@
   <script type="text/template" id="variable-filter">
     <form oninput="level.value = {{=it.name}}.valueAsNumber;">
       <input class="filter" type="checkbox" name="filter"/>{{=it.name}}
-      <input type="range" min="{{=it.min}}" max="{{=it.max}}" id="{{=it.name}}-filter" name="{{=it.name}}" value="{{=it.currentValue}}" step="{{=it.step}}"/>
+      <input type="range" min="{{=it.min}}" max="{{=it.max}}" id="{{=it.name}}-filter" name="{{=it.name}}" value="{{=it.currentValue}}" step="{{=it.step}}" class="variable-filter"/>
       <output style="margin-left: 20px; padding:14px;" for="{{=it.name}}-filter" name="level">{{=it.currentValue}}</output>
     </form>
   </script>
@@ -35,7 +35,12 @@
   <script src="js/models/inversion-filter.js"></script>
   <script src="js/models/sepia-filter.js"></script>
   <script src="js/models/emboss-filter.js"></script>
-  <script src="js/models/luminance-filter.js"></script>
+  <script src="js/models/threshold-filter.js"></script>
+  <script src="js/models/bayer-filter.js"></script>
+  <script src="js/models/low-res.js"></script>
+  <script src="js/models/xor-filter.js"></script>
+  <script src="js/views/filter-view.js"></script>
+  <script src="js/views/variable-filter.js"></script>
   <script src="js/views/grayscale-view.js"></script>
   <script src="js/views/contrast-view.js"></script>
   <script src="js/views/brightness-view.js"></script>
@@ -43,6 +48,10 @@
   <script src="js/views/inversion-view.js"></script>
   <script src="js/views/sepia-view.js"></script>
   <script src="js/views/emboss-view.js"></script>
+  <script src="js/views/threshold-view.js"></script>
+  <script src="js/views/bayer-view.js"></script>
+  <script src="js/views/low-res-view.js"></script>
+  <script src="js/views/xor-view.js"></script>
 </head>
 <body>
   <video id="camera-input"></video>
@@ -53,11 +62,11 @@
   </div>
   <div>
     <button id="snapshot">Take a Photo</button>
-<!--     <form name='canvas-blur' oninput="level.value = canvasBlur.valueAsNumber;">
+    <form name='canvas-blur' oninput="level.value = canvasBlur.valueAsNumber;">
       <label for="canvasBlur">Blur</label>
       <input type="range" min="0.0" max="1.0" step="0.1" id="canvasBlur" name="canvasBlur" value="1.0"/>
       <output for="canvasBlur" name="level">1.0</output>
-    </form> -->
+    </form>
 
     <button id="stop">Stop</button>
     <div class='filters'>
@@ -69,19 +78,21 @@
     <div id='invert'></div>
     <div id='sepia'></div>
     <div id='emboss'></div>
+    <div id='threshold'></div>
+    <div id='bayer'></div>
+    <div id='low-res'></div>
+    <div id='xor'></div>
     
     
-<!--     <input class="filter" type="checkbox" name="filter" value="threshold">Threshold<br>
+<!--
     
-    <input class="filter" type="checkbox" name="filter" value="saturate">saturate<br>
-    <input class="filter" type="checkbox" name="filter" value="contrast">contrast<br>
-    <input class="filter" type="checkbox" name="filter" value="sepia">Sepia<br>
-    <input class="filter" type="checkbox" name="filter" value="bayer">Bayer Monochrome<br>
+    
+    
+    
+    
     <input class="filter" type="checkbox" name="filter" value="bayerColor">Bayer 8Color<br>
-    <input class="filter" type="checkbox" name="filter" value="lowResColor">4bit RGB 16 Color<br>
     <input class="filter" type="checkbox" name="filter" value="median">Median<br>
     <input class="filter" type="checkbox" name="filter" value="emboss">emboss<br>
-    <input class="filter" type="checkbox" name="filter" value="burnX">burn xor<br>
     <input class="filter" type="checkbox" name="filter" value="burnO">burn or<br>
     <input class="filter" type="checkbox" name="filter" value="burnA">burn and<br> -->
 
@@ -107,17 +118,24 @@
     var ivf = new InversionFilter();
     var spf = new SepiaFilter();
     var ef = new EmbossFilter();
+    var tf = new ThresholdFilter();
+    var byf = new BayerFilter();
+    var lrf = new LowResFilter();
+    var xof = new XORFilter();
 
-    collection.add([gsf, cf, bf, sf, ivf, spf, ef]);
+   collection.add([gsf, cf, bf, sf, ivf, spf, ef, tf, byf, lrf, xof]);
 
-
-    gsv = new GrayscaleView({model: gsf}).render();
-    cfv = new ContrastView({model: cf}).render();
-    bfv = new BrightnessView({model: bf}).render();
-    sfv = new SaturationView({model: sf}).render();
-    ivfv = new InversionView({model: ivf}).render();
-    spfv = new SepiaView({model: spf}).render();
-    new EmbossView({model: ef}).render();
+    new GrayscaleView({model: gsf}).render();
+    new ContrastView({model: cf}).render();
+    new BrightnessView({model: bf}).render();
+    new SaturationView({model: sf}).render();
+    new InversionView({model: ivf}).render();
+    new SepiaView({model: spf}).render();
+    var aa = new EmbossView({model: ef}).render();
+    new ThresholdView({model: tf}).render();
+    new BayerView({model: byf}).render();
+    new LowResView({model: lrf}).render();
+    new XORView({model: xof}).render();
 
     var hdConstraints = {
       video: {
@@ -276,57 +294,6 @@
         }
 
         return data
-      },
-
-      threshold: function(imageData, threshold) {
-        /* Make the blacks black and the whites white */
-
-        threshold = threshold || 70
-
-        var l = imageData.data.length,
-            data = imageData.data,
-            i = 0,
-            r,g,b;
-
-        for (i; i < l; i += 4) {
-          r = data[i];
-          g = data[i+1];
-          b = data[i+2];
-          // Invert looks marignally better with this grayscale formula
-          data[i] = data[i+1] = data[i+2] = ((3*r+4*g+b) >>> 3) >= threshold ? 255 : 0;
-        }
-
-        return data;
-      },
-
-      // Perform some gameboy era pixelations
-      bayer: function(imageData) {
-        var w = imageData.width;
-        var data = imageData.data;
-        var length = data.length;
-
-        var i = 0;
-        var matrix = [3,7,4,6,1,9,2,8,5];
-
-        while ((i = i + 4) < length) {
-          var  ii = (i >> 2);
-          var x = (ii % w);
-          var y = ((ii - x) / w);
-          // Scale our color value (0-765) in between 1 and 9
-          /*
-           * General scaling formula
-           * initial_range := (min..max)
-           * target_range := (a..b)
-           * x := some value in the initial range
-           *
-           * ((b - a) * (x - min) / (max - min)) + 1
-          */
-          var pixVal = (((8 * (data[i]+data[i+1]+data[i+2])) / 765) | 0) + 1;
-
-          data[i] = data[i + 1] = data[i + 2] = pixVal >= matrix[(y%3)*3+(x%3)] ? 255 : 0;
-        }
-
-        return data;
       },
 
       bayerColor: function(imageData) {
@@ -515,6 +482,7 @@
     
     CanvasView.prototype.initialize = function() {
       document.getElementById("snapshot").addEventListener("click", this.takePhoto.bind(this));
+      document.getElementById("canvasBlur").addEventListener("input", this.blur.bind(this));
       this.backingVideo.addEventListener('loadeddata', function() {
         
         this.backingVideo.play();
@@ -529,6 +497,16 @@
       
       return this;
     };
+
+    CanvasView.prototype.blur = function(event) {
+      if (!this.isActive()) return false;
+
+
+      var ctx = this.canvas.getContext("2d"),
+          currentAlpha = ctx.globalAlpha;
+
+      ctx.globalAlpha = +event.target.value;
+    },
 
     CanvasView.prototype.getPixels = function() {
       if (!this.isActive()) {
@@ -588,17 +566,9 @@
         if (newVal) {
           self.addFilter(model);
         } else {
-          //
+          self.filters.splice(self.filters.indexOf(model),1);
         }
       });
-     
-
-
-      var convolvers = el.querySelectorAll(".convolver");
-
-      for  (var i = 0; i < convolvers.length; i++) {
-        convolvers[i].addEventListener("click", this.addFilter.bind(this));
-      }
     }
 
 
@@ -610,16 +580,8 @@
 
 
     FilterView.prototype.process = function(imageData) {
-      function filterPixelData(filter) {
-        // if (filter.get('type') === 'convolver') {
-        //   imageData = Filter.convolve(imageData, filter.matrix);
-        // } else if (filter.get('type') === 'filter') {
-          imageData.data = filter.filter(imageData);
-       // }
-      }
-
       for (var i = 0; i < this.filters.length; i++) {
-        filterPixelData(this.filters[i]);
+        imageData.data = this.filters[i].filter(imageData);
       }
 
       return imageData;
@@ -717,18 +679,11 @@
       this.canvasView.on('ON_VIDEO_LOAD', this.startAnimationLoop.bind(this));
     };
 
-    AppController.prototype.transform = function(imageData) {
-      return this.filtersView.process(imageData);
-    };
-
     AppController.prototype.startAnimationLoop = function() {
       var self = this;
 
-      // TODO make this a two part process, query the canvas for data,
-      //transform it, and send it back to be painted.
-
       function animationCallback() {
-        var transformedData = self.transform(self.canvasView.getPixels()); 
+        var transformedData = self.filtersView.process(self.canvasView.getPixels()); 
         var shouldKeepDrawing = self.canvasView.draw(transformedData);
 
         if (!shouldKeepDrawing) {

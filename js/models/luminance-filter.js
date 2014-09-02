@@ -1,4 +1,4 @@
-var Luminance = VL.Model.extend({
+var LuminanceFilter = VL.Model.extend({
   defaults: {
     'name':        'luminance',
     'type':        'filter',
@@ -13,12 +13,11 @@ var Luminance = VL.Model.extend({
   init: function() {},
 
   _sourceLuminance: function(r,g,b) {
-    return 0.299 * r + 0.587 * g + 0.114 * b;
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   },
 
   filter: function(imageData) {
     var data = imageData.data;
-    
     var length = data.length;
     var ii = 0;
 
@@ -29,9 +28,13 @@ var Luminance = VL.Model.extend({
 
       var ratio = this.get('currentValue') / this._sourceLuminance(r,g,b);
 
-      data[ii]   = r * ratio;
-      data[ii+1] = g * ratio;
-      data[ii+2] = b * ratio;
+      var rr = (r * ratio | 0); 
+      var gg = (g * ratio | 0);
+      var bb = (b * ratio | 0);
+
+      data[ii]   = rr;
+      data[ii+1] = gg;
+      data[ii+2] = bb;
     }
 
     return data;
