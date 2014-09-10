@@ -1,10 +1,6 @@
 var VariableFilterView = VL.View.extend({
-  constructor: VL.View,
+  //constructor: VL.View,
   template: document.getElementById('variable-filter').innerHTML,
-
-  init: function(options) {
-    this.model = options.model;
-  },
 
   events: {
     '.filter click': 'toggleFilter',

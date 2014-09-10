@@ -1,11 +1,5 @@
-var FilterView = VL.View.extend({
-  constructor: VL.View,
+var FixedFilterView = VL.View.extend({
   template: document.getElementById('fixed-filter').innerHTML,
-
-  init: function(options) {
-    this.model = options.model;
-  },
-
   events: {
     '.filter click': 'toggleFilter'
   },

@@ -220,6 +220,7 @@
     this.id = 'view' + uniqueId();
     options = options || {};
 
+    this._setFromOptions(options);
     this._getElement();
     this._bindEvents();
 
@@ -238,13 +239,23 @@
     find: function(selector) {
       return this.el.querySelector(selector);
     },
+    
+    _setFromOptions: function(options) {
+      var OPTIONS = ['template', 'el', 'model'];
+
+      for (var option in options) {
+        if (~OPTIONS.indexOf(option.toLowerCase())) {
+          this[option] = options[option];
+        }
+      }
+    },
 
     _getElement: function() {
       if (!this.el) {
         this.el = document.createElement('div');
+      } else {
+        this.el = document.querySelector(this.el);
       }
-
-      this.el = document.querySelector(this.el);
 
       return this;
     },

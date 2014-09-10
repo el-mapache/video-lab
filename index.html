@@ -22,12 +22,17 @@
   <script type="text/template" id="fixed-filter">
     <input class="filter" type="checkbox" name="filter" value="{{=it.name}}">{{=it.name}}<br>
   </script>
+
+  <script type="text/template" id="convolver">
+    <button class="convolver" value='{{=it.name}}'>{{=it.name}}</button></br>
+  </script>
   
   <script src='js/dot.js'></script>
   <script src="js/util.js"></script>
   <script src="js/services.js"></script>
   <script src="js/framework.js"></script>
   <script src="js/collections/filter-collection.js"></script>
+  <script src="js/models/convolver.js"></script>
   <script src="js/models/grayscale-filter.js"></script>
   <script src="js/models/contrast-filter.js"></script>
   <script src="js/models/brightness-filter.js"></script>
@@ -39,19 +44,11 @@
   <script src="js/models/bayer-filter.js"></script>
   <script src="js/models/low-res.js"></script>
   <script src="js/models/xor-filter.js"></script>
+  <script src="js/models/median-filter.js"></script>
+  <script src="js/models/sobel-filter.js"></script>
   <script src="js/views/filter-view.js"></script>
   <script src="js/views/variable-filter.js"></script>
-  <script src="js/views/grayscale-view.js"></script>
-  <script src="js/views/contrast-view.js"></script>
-  <script src="js/views/brightness-view.js"></script>
-  <script src="js/views/saturation-view.js"></script>
-  <script src="js/views/inversion-view.js"></script>
-  <script src="js/views/sepia-view.js"></script>
-  <script src="js/views/emboss-view.js"></script>
-  <script src="js/views/threshold-view.js"></script>
-  <script src="js/views/bayer-view.js"></script>
-  <script src="js/views/low-res-view.js"></script>
-  <script src="js/views/xor-view.js"></script>
+  <script src="js/views/convolution-view.js"></script>
 </head>
 <body>
   <video id="camera-input"></video>
@@ -69,40 +66,45 @@
     </form>
 
     <button id="stop">Stop</button>
+
     <div class='filters'>
-    <br><br>
-    <div id='grayscale'></div>
-    <div id='contrast'></div>
-    <div id='brightness'></div>
-    <div id='saturation'></div>
-    <div id='invert'></div>
-    <div id='sepia'></div>
-    <div id='emboss'></div>
-    <div id='threshold'></div>
-    <div id='bayer'></div>
-    <div id='low-res'></div>
-    <div id='xor'></div>
+      <br><br>
+
+      <h4>Fixed Filters</h4>
+      <div id='grayscale'></div>
+      <div id='invert'></div>
+      <div id='sepia'></div>
+      <div id='emboss'></div>
+      <div id='low-res'></div>
+      <div id='bayer'></div>
+      <div id='xor'></div>
+
+      
+      <h4>Variable Filters</h4>
+
+      <div id='contrast'></div>
+      <div id='brightness'></div>
+      <div id='saturation'></div>
+      <div id='threshold'></div>
+      <div id='median'></div>
+
+      
+      <h4>Convolvers</h4>
+
+      <div id='sobel'></div>
     
     
 <!--
-    
-    
-    
-    
-    
     <input class="filter" type="checkbox" name="filter" value="bayerColor">Bayer 8Color<br>
-    <input class="filter" type="checkbox" name="filter" value="median">Median<br>
-    <input class="filter" type="checkbox" name="filter" value="emboss">emboss<br>
     <input class="filter" type="checkbox" name="filter" value="burnO">burn or<br>
     <input class="filter" type="checkbox" name="filter" value="burnA">burn and<br> -->
-
-    <button class="convolver" value='laplace'>Laplace</button>
-    <button class="convolver" value='sobel'>Sobel</button>
-    <button class="convolver" value='sharpen'>Sharpen</button>
-    <button class="convolver" value="blur">Blur</button>
-    <button class="convolver" value="emboss">Emboss</button>
-    <button class="convolver" value="edge">Edge</button>
-</div>
+      <button class="convolver" value='laplace'>Laplace</button>
+      
+      <button class="convolver" value='sharpen'>Sharpen</button>
+      <button class="convolver" value="blur">Blur</button>
+      <button class="convolver" value="emboss">Emboss</button>
+      <button class="convolver" value="edge">Edge</button>
+    </div>
     <button id="reset">Reset</button>
 
     <button id='loop'>Store last second of video</button>
@@ -122,20 +124,29 @@
     var byf = new BayerFilter();
     var lrf = new LowResFilter();
     var xof = new XORFilter();
+    var mdf = new MedianFilter();
+    var sbf = new SobelFilter();
 
-   collection.add([gsf, cf, bf, sf, ivf, spf, ef, tf, byf, lrf, xof]);
 
-    new GrayscaleView({model: gsf}).render();
-    new ContrastView({model: cf}).render();
-    new BrightnessView({model: bf}).render();
-    new SaturationView({model: sf}).render();
-    new InversionView({model: ivf}).render();
-    new SepiaView({model: spf}).render();
-    var aa = new EmbossView({model: ef}).render();
-    new ThresholdView({model: tf}).render();
-    new BayerView({model: byf}).render();
-    new LowResView({model: lrf}).render();
-    new XORView({model: xof}).render();
+   collection.add([gsf, cf, bf, sf, ivf, spf, ef, tf, byf, lrf, xof, mdf, sbf]);
+
+    // Fixed Filters
+    new FixedFilterView({el: '#grayscale', model: gsf}).render();
+    new FixedFilterView({el: '#sepia', model: spf}).render();
+    new FixedFilterView({el: '#invert', model: ivf}).render();
+    new FixedFilterView({el: '#emboss', model: ef}).render();
+    new FixedFilterView({el: '#low-res', model: lrf}).render();
+    new FixedFilterView({el: '#bayer', model: byf}).render();
+    new FixedFilterView({el: '#xor', model: xof}).render(); 
+
+    new VariableFilterView({el: '#saturation', model: sf}).render();
+    new VariableFilterView({el: '#contrast', model: cf}).render();
+    new VariableFilterView({el: '#brightness', model: bf}).render();
+    new VariableFilterView({el: '#threshold', model: tf}).render();
+    new VariableFilterView({el: '#median', model: mdf}).render();
+
+    new ConvolutionFilterView({el: '#sobel', model: sbf}).render();
+   
 
     var hdConstraints = {
       video: {
@@ -168,66 +179,6 @@
 
     var Filter = {
       convolverActive: false,
-
-      convolve: function(pixels, weights, opacity) {
-        // This determines how many rows the kernal has
-        var side = Math.round(Math.sqrt(weights.length));
-        // offset based on kernal size
-        var halfSide = Math.floor(side/2);
-        var src = pixels.data;
-        // source width
-        var sw = pixels.width;
-        // source height
-        var sh = pixels.height;
-        // pad output by the convolution matrix
-
-        var output  = document.createElement("canvas").getContext("2d").createImageData(sw,sh);
-        var dst = output.data;
-        // go through the destination image pixels
-        var alphaFac = opacity ? 1 : 0;
-        var y = 0;
-
-        while ((++y) < sh) {
-          var x = 0;
-          while ((++x) < sw) {
-            // alias for further manipulation
-            var sy = y;
-            var sx = x;
-
-            var dstOff = (y*sw+x)*4;
-            // calculate the weighed sum of the source image pixels that
-            // fall under the convolution matrix
-            var r = 0, g = 0, b = 0, a =0;
-            //var cy = 0;
-
-            // cy refers the the kernal row, the first row of the matrix
-            for (var cy=0; cy<side; cy++) {
-              //var cx = 0;
-              //cy refers to each element within the kernal row
-              for (var cx=0; cx<side; cx++) {
-
-                var scy = sy + cy - halfSide;
-                var scx = sx + cx - halfSide;
-                if (scy >= 0 && scy < sh && scx >= 0 && scx < sw) {
-                  var srcOff = (scy*sw+scx)*4;
-
-                  var wt = weights[cy*side+cx];
-
-                  r += src[srcOff] * wt;
-                  g += src[++srcOff] * wt;
-                  b += src[++srcOff] * wt;
-                  a += src[++srcOff] * wt;
-                }
-              }
-            }
-            dst[dstOff] = r;
-            dst[++dstOff] = g;
-            dst[++dstOff] = b;
-            dst[++dstOff] = 255;
-          }
-        }
-        return output;
-      },
 
 
       burnX: function(imageData) {
@@ -325,136 +276,6 @@
         }
 
         return data;
-      },
-
-      lowResColor: function(imageData) {
-        var data = imageData.data;
-        var length = data.length;
-
-        var i = 0;
-
-        var RGB = [
-          [0,0,0],    
-          [0,0,170],  
-          [0,170,0],
-          [0,170,170],
-          [170,0,0],
-          [170,0,170],
-          [170,85,0],
-          [85.85,85],
-          [85,85,255],
-          [85,255,85],
-          [85,255,255],
-          [255,85,85],
-          [255,85,255],
-          [255,255,85],
-          [255,255,255]
-        ];
-        
-        var len = RGB.length;
-
-        function clamp(r,g,b) {
-          var i = 1;
-          var color = RGB[0];
-
-
-          var next;
-          var clampIdx = 0;
-
-          if (r == color[0] && g == color[1] && b == color[2]) return color;
-
-          var x = r - color[0];
-          var y = g - color[1];
-          var z = b - color[2];
-
-          var distance = x*x + y*y + z*z;
-
-
-          while (i < len) {
-            color = RGB[i];
-
-            var x = r - color[0];
-            var y = g - color[1];
-            var z = b - color[2];
-
-            var next = x*x + y*y + z*z;
-
-            if (next < distance) {
-              distance = next;
-              clampIdx = i;
-            }
-            i++;
-          }
-
-          return RGB[clampIdx];
-        }
-
-        var clamped;
-        while ((i = i + 4) < length) {
-          clamped = clamp(data[i], data[i+2], data[i+2]);
-          
-          data[i] = clamped[0];
-          data[i+1] = clamped[1];
-          data[i+2] = clamped[2];
-        }
-
-        return data;
-      },
-
-
-      median: function(srcData, filterSize) {
-        var h = srcData.height,
-            w = srcData.width,
-            dstPixels = pixels = srcData.data,
-            neighbors = [],
-            filterSize = 7,
-            edge = filterSize,
-            halfEdge = (edge >> 1) | 0;
-
-        // We need to loop through every pixel of the source image
-        for (var x = 0; x < w; ++x) {
-          for (var y = 0; y < h; ++y) {
-            // Maintain a separate variable to act as an accessor
-            // for the neighbors array, reset on each iteration
-            var count = 0;
-            // Shifting two bits to the left multiples the total product
-            // by 4.
-            var dstOffset = (y * w + x) << 2;
-            neighbors.length = 0;
-
-            // This set of loops defines the maxtrix "window" that we'll
-            // move over our pixels to get all neighboring values
-            for (var xx = 0; xx < edge; ++xx) {
-              for (var yy = 0; yy < edge; ++yy) {
-                // get the x and y coords of where our lil'
-                // window is right now in the image
-                var scx = x + xx - halfEdge;
-                var scy = y + yy - halfEdge;
-
-                // Is our window within the bounds of the image?
-                if ( scx >= 0 && scx < w && scy >= 0 && scy < h) {
-
-                  var windowPos = (scy * w + scx) << 2;
-                  
-                  // Stuff the color data into a single int
-                  var result = pixels[windowPos] << 24; // roy
-                  result |= pixels[++windowPos] << 16; // gee
-                  result |= pixels[++windowPos] << 8; // biv
-                  
-                  neighbors[count] = result;
-                  count++;
-                }
-              }
-            }
-
-            var color = neighbors.sort(compareNumbers)[((neighbors.length - 1)  >> 1) | 0];
-
-            dstPixels[dstOffset] = color >> 24 & 0xff;
-            dstPixels[++dstOffset] = color >> 16 & 0xff;
-            dstPixels[++dstOffset] = color >> 8 & 0xff;
-          }
-        }
-        return dstPixels;
       }
     };
 
@@ -512,10 +333,11 @@
       if (!this.isActive()) {
         return null;
       }
-
+      
       this.canvasContext.drawImage(this.backingVideo, 0, 0);
-      //return this.canvasContext.getImageData(0, 0, this.width, this.height);
-      return this.canvasContext.getImageData(0, 0, this.width*2, this.height*2);
+      var data = this.canvasContext.getImageData(0, 0, this.width*2, this.height*2);
+     // this.canvasContext.transform(1,0.5,-0.5,1,10,10);
+      return data;
     };
 
     CanvasView.prototype.draw = function(imageData) {
@@ -581,7 +403,14 @@
 
     FilterView.prototype.process = function(imageData) {
       for (var i = 0; i < this.filters.length; i++) {
-        imageData.data = this.filters[i].filter(imageData);
+        var filter = this.filters[i];
+        var type = filter.get('type');
+
+        if (type === 'convolver') {
+          imageData = filter.convolve(imageData, filter.get('matrix'));
+        } else {
+          imageData.data = this.filters[i].filter(imageData);  
+        }
       }
 
       return imageData;
