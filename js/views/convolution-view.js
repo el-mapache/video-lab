@@ -12,5 +12,6 @@ var ConvolutionFilterView = VL.View.extend({
 
   toggleFilter: function(event) {
     this.model.set('active', !this.model.get('active'));
+    this.render();
   }
 });
