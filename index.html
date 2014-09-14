@@ -58,7 +58,7 @@
 </head>
 <body>
   <video id="camera-input"></video>
-  <canvas height="360" width="480"></canvas>
+  <canvas width="640" height="360"></canvas>
   <br>
   <div style='float:right; margin-right:200px;'>
     <div id='cc'></div>
@@ -119,10 +119,50 @@
 
      <!--  <button class="convolver" value="edge">Edge</button> -->
     
+    <div id="image-data">
+      <img src='' id="image-preview" height="150" width="150"/>
+      <input type="file" id="file-upload" accept="image/gif, image/jpeg, image/png"/>
+    </div>
 
   </div>
 
   <script>
+    var currentFile = null;
+    var reader = new FileReader();
+    var imageCanvas = document.createElement('canvas');
+    var imgEl = document.getElementById('image-preview');
+    var currentFileData = null;
+
+    reader.onload = function(event) {
+      var img = new Image();
+
+      imgEl.addEventListener('load', function() {
+
+      });
+
+      img.onload = function() {
+        imageCanvas.width = img.width * 2;
+        imageCanvas.height = img.height * 2;
+        var context = imageCanvas.getContext('2d');
+
+        context.drawImage(img, 0, 0);
+
+        currentFileData = context.getImageData(0,0,this.width *2 , this.height *2).data;
+        
+        imgEl.src = this.src;
+      }
+      img.src = event.target.result;
+    };
+
+    document.getElementById('file-upload').addEventListener('change', function(event) {
+      var file = event.currentTarget.files[0];
+
+      if (file) {
+        currentFile = file;
+        reader.readAsDataURL(file);
+      }
+    });
+
     var collection = new FilterCollection();
     
     var gsf = new GrayscaleFilter();
@@ -185,17 +225,6 @@
         }
       }
     };
-
-    var dataBuffer = -1;
-
-    function grayscale(r,g,b) {
-      //3*r+4*g+b) >>> 3
-      return (0.21 * r + 0.72 * g + 0.07 * b);
-    }
-
-    function compareNumbers(a,b) {
-      return a - b;
-    }
 
     var Filter = {
       convolverActive: false,
@@ -312,12 +341,12 @@
 
       this.height = this.canvas.height;
       this.width = this.canvas.width;
+//
+     // this.canvas.width = this.width * 2;
+      //this.canvas.height = this.height * 2;
 
-      this.canvas.width = this.width * 2;
-      this.canvas.height = this.height * 2;
-
-      this.canvas.style.width = this.width + 'px';
-      this.canvas.style.height = this.height + 'px';
+      // this.canvas.style.width = this.canvas.width + 'px';
+      // this.canvas.style.height = this.canvas.height + 'px';
 
       this.initialize();
     }
@@ -367,9 +396,9 @@
         this.canvasContext.drawImage(this.backingVideo, 0, 0);
       }
 
-      return this.canvasContext.getImageData(0, 0, this.width*2, this.height*2);
+      var data = this.canvasContext.getImageData(0, 0, this.width*2, this.height*2);
      // this.canvasContext.transform(1,0.5,-0.5,1,10,10);
-      //return data;
+      return data;
     };
 
     CanvasView.prototype.draw = function(imageData) {
@@ -446,24 +475,6 @@
       }
 
       return imageData;
-    };
-
-    FilterView.prototype._buildConvolver = function(evt) {
-      var convolver = evt.currentTarget.value;
-
-      var filter;
-
-      switch (convolver) {
-        case "edge":
-          filter = {
-            name: convolver,
-            type: 'convolver',
-            matrix: [-6,-4,0,-10,10,1,0,4,6]
-          }
-          break;
-      }
-
-      return filter;
     };
 
     FilterView.prototype.constructor = FilterView;
@@ -753,13 +764,8 @@
 
         anchor = document.createElement("a");
         anchor.href = this.canvas.toDataURL("image/png");
-        //window.location = this.canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-        //return;
         anchor.download = "image"+ +new Date() + ".png";
 
-//anchor.innerHTML = 'p';
-  //  document.body.appendChild(anchor);
-  //  return;
         click = document.createEvent("Event");
         click.initEvent("click", true, true);
 

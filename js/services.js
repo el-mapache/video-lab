@@ -19,7 +19,12 @@ var Services = {
         if (hasRequestedAccess) return callback(mediaStream);
 
         getUserMedia(
-          {video: true},
+          {video:  {
+            mandatory: {
+              maxWidth: 640,
+              maxHeight: 360
+            }}
+          },
           function(stream) {
             mediaStream = stream;
             hasRequestedAccess = true;
