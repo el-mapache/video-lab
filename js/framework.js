@@ -5,6 +5,7 @@
 
   EventEmitter.prototype = {
     _events: {},
+
     on: function(event, fn, context) {
       this._events = this._events || {};
       this._events[event] = this._events[event] || [];
@@ -24,34 +25,36 @@
       this._events = this._events || {};
       var events = this._events[event] || [];
       
-      var ii = 0;
+      var handlerCount = 0;
       var len = events.length;
       
       var allEvents = this._events['all'];
 
       if (allEvents) {
-        var iii = 0;
+        var currEventCount = 0;
         var length = allEvents.length;
-        while (iii < length) {
-          var e = allEvents[iii];
+        
+        while (currEventCount < length) {
+          var handlerObj = allEvents[currEventCount];
 
-          e.fn.apply(e.ctx, [].slice.call(arguments));
-          iii++;
+          handlerObj.fn.apply(handlerObj.ctx, [].slice.call(arguments));
+          currEventCount++;
         }
       }
 
-      while (ii < len) {
-        var e = events[ii];
-        e.fn.apply(e.ctx, [].slice.call(arguments));
-        ii++;
+      while (handlerCount < len) {
+        var handlerObj = events[handlerCount];
+        handlerObj.fn.apply(handlerObj.ctx, [].slice.call(arguments));
+        handlerCount++;
       }
     },
 
     attachTo: function(destObject) {
       var props = ['on', 'unbind', 'trigger'];
       var ii = -1;
+      var len = props.length;
 
-      while ((ii = ii + 1) < 3) {
+      while ((ii = ii + 1) < len) {
         if ( typeof destObject === 'function' ) {
           destObject.prototype[props[ii]]  = this[props[ii]];
         } else {
@@ -67,18 +70,23 @@
 
   var Collection = function(options) {
     options = options || {};
+    
+    this.length = 0;
+    this.modelsLookup = {};
+    this.models = [];
 
+    this.add(options.models);
     this.init.apply(this, arguments);
   };
 
   Utils.extend(Collection.prototype, {
-    length: 0,
-    modelsLookup: {},
-    models: [],
-
     init: function() {},
 
     add: function(models) {
+      if (!models) {
+        return this;
+      }
+
       models = models instanceof Array ? models : [models];
       
       Utils.forEach(models, this._addModel.bind(this));
@@ -86,33 +94,30 @@
       return this;
     },
 
-    remove: function(key) {
-      return 'dont use me';
-    
-      //This requires more work to actually update the lookup table, etc
-      // Luckily i wont be removing anything yet.
+    remove: function(model) {
+      var idToRemove = model && model.id;
+      var arrayIndex = this.modelsLookup[idToRemove];
 
-      // if (!this.elements[key]) return null;
-
-      // delete this.elements[key];
-      // this.length--;
-      // this.trigger('collection.remove');
-
-      // return this.elements;
-
-    },
-
-    at: function(index) {
-      return this.models[index] || null;
-    },
-
-    each: function(callback) {
-      var key;
-      for (key in this.elements) {
-        if (this.elements.hasOwnProperty(key)) {
-          callback(this.elements[key]);
-        }
+      if (!arrayIndex && arrayIndex !== 0) {
+        return this;
       }
+
+      // Remove the model from the array and decrement the collection counter
+      var removed = this.models.splice(arrayIndex, 1)[0];
+      this.length--;
+
+      // Remove the model from the lookup table
+      delete this.modelsLookup[idToRemove];
+
+      // Reindex the lookup
+      var lookup = this.modelsLookup;
+      this.models.forEach(function(model, index) {
+        lookup[model.id] = index;
+      });
+      
+      this.trigger('collection.remove', removed, this);
+
+      return this;
     },
 
     get: function(id) {
@@ -120,15 +125,29 @@
         return this.getAll();
       }
 
-      return this.models[this.modelsLookup[id]];
+      return this.at(this.modelsLookup[id]);
     },
 
     getAll: function() {
       return this.models;
     },
 
-    _passModelEvent: function(eventName, newVal, oldVal, model) {
-      this.trigger(eventName, newVal, oldVal, model);
+    at: function(index) {
+      return this.models[index] || null;
+    },
+
+    first: function() {
+      return this.models[0] || null;
+    },
+
+    last: function() {
+      return this.models[this.length - 1] || null;
+    },
+
+    each: function(callback) {
+      Utils.forEach(this.models, function(model) {
+        callback(model);
+      });
     },
 
     _addModel: function(model, index) {
@@ -148,7 +167,11 @@
       this.length++;
 
       this.trigger('collection.add');
-    }
+    },
+
+    _passModelEvent: function(eventName, newVal, oldVal, model) {
+      this.trigger(eventName, newVal, oldVal, model);
+    },
   });
 
   root.VL.Events.prototype.attachTo(Collection);
@@ -241,7 +264,7 @@
     },
     
     _setFromOptions: function(options) {
-      var OPTIONS = ['template', 'el', 'model'];
+      var OPTIONS = ['template', 'el', 'model', 'collection'];
 
       for (var option in options) {
         if (~OPTIONS.indexOf(option.toLowerCase())) {

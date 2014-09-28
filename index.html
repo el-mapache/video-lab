@@ -27,11 +27,16 @@
     <button class="convolver {{=it.active}}" value='{{=it.name}}'>{{=it.name}}</button></br>
   </script>
   
+  <!--<script src="lib/flow-calculator.js"></script>
+  <script src="lib/flow-zone.js"></script>
+  <script src="lib/webcam-flow.js"></script>
+  <script src="lib/colors.js"></script>-->
+
   <script src='js/dot.js'></script>
   <script src="js/util.js"></script>
   <script src="js/services.js"></script>
   <script src="js/framework.js"></script>
-  <script src="js/collections/filter-collection.js"></script>
+
   <script src="js/models/convolver.js"></script>
   <script src="js/models/grayscale-filter.js"></script>
   <script src="js/models/contrast-filter.js"></script>
@@ -51,10 +56,14 @@
   <script src="js/models/blur.js"></script>
   <script src="js/models/emboss.js"></script>
 
+  
+  <script src="js/collections/filter-collection.js"></script>
+
 
   <script src="js/views/filter-view.js"></script>
   <script src="js/views/variable-filter.js"></script>
   <script src="js/views/convolution-view.js"></script>
+  <script src="js/views/filter-collection-view.js"></script>
 </head>
 <body>
   <video id="camera-input"></video>
@@ -136,10 +145,6 @@
     reader.onload = function(event) {
       var img = new Image();
 
-      imgEl.addEventListener('load', function() {
-
-      });
-
       img.onload = function() {
         imageCanvas.width = img.width * 2;
         imageCanvas.height = img.height * 2;
@@ -150,7 +155,8 @@
         currentFileData = context.getImageData(0,0,this.width *2 , this.height *2).data;
         
         imgEl.src = this.src;
-      }
+      };
+
       img.src = event.target.result;
     };
 
@@ -163,7 +169,7 @@
       }
     });
 
-    var collection = new FilterCollection();
+   
     
     var gsf = new GrayscaleFilter();
     var bf = new BrightnessFilter();
@@ -183,8 +189,9 @@
     var blf = new BlurFilter();
     var ebc = new EmbossConvolver();
 
-
-   collection.add([gsf, cf, bf, sf, ivf, spf, ef, tf, byf, lrf, xof, mdf, sbf, lpf,shf,blf,ebc]);
+    var filterCollection = new FilterCollection({
+      models: [gsf, cf, bf, sf, ivf, spf, ef, tf, byf, lrf, xof, mdf, sbf, lpf,shf,blf,ebc]
+    });
 
     // Fixed Filters
     new FixedFilterView({el: '#grayscale', model: gsf}).render();
@@ -328,6 +335,34 @@
       }
     };
 
+    // var calculator = new FlowCalculator(zoneSize || 8),
+    //     oldImage. newImage;
+
+    // function WebcamFlow(videoTag, zoneSize) {
+    //   var isCapturing,
+    //     calculatedCallbacks = [],
+    //     gotFlow = function(direction) {
+    //       calculatedCallbacks.forEach(function (callback) {
+    //         callback(direction);
+    //       });
+    //     };
+      
+    //   var videoFlow = new VideoFlow(this.backingVideo, 4);
+
+    //   this.startCapture = function () {
+    //     videoFlow.startCapture(videoTag);
+    //     videoFlow.onCalculated(gotFlow);
+    //   };
+
+    //   this.onCalculated = function (callback) {
+    //     calculatedCallbacks.push(callback);
+    //   };
+
+    //   this.stopCapture = function() {
+    //     if (videoFlow) { videoFlow.stopCapture(); }
+    //     if (videoTag) { videoTag.pause(); }
+    //   };
+    // }
 
     function CanvasView(el, stream) {
       // Whether or not the view screen is receiving data.
@@ -337,7 +372,6 @@
       this.canvasContext = this.canvas.getContext('2d');
       this.stream = stream;
       this.backingVideo = document.createElement('video');
-
 
       this.height = this.canvas.height;
       this.width = this.canvas.width;
@@ -371,7 +405,9 @@
     };
 
     CanvasView.prototype.blur = function(event) {
-      if (!this.isActive()) return false;
+      if (!this.isActive()) {
+        return false;
+      }
 
 
       var ctx = this.canvas.getContext("2d"),
@@ -381,10 +417,11 @@
     };
 
     CanvasView.prototype.toggleFeedback = function() {
-      if (!this.isActive()) return false;
+      if (!this.isActive()) {
+        return false;
+      }
 
       this.feedback = !this.feedback;
-      console.log(this.feedback)
     };
 
     CanvasView.prototype.getPixels = function() {
@@ -405,6 +442,17 @@
       if (!this.isActive()) {
         return false;
       }
+
+      // var newImage = imageData.data;
+      
+      // if (oldImage && newImage) {
+      //   var zones = calculator.calculate(oldImage, newImage, this.width, this.height);
+      //   calculatedCallbacks.forEach(function (callback) {
+      //     callback(zones);
+      //   });
+      // } 
+      
+      // oldImage = newImage;
 
       this.canvasContext.putImageData(imageData, 0, 0);
       
@@ -434,60 +482,14 @@
 
 
 
-
-
-
-    function FilterView(el) {
-      this.el = el;
-
-      this.activeFilters = collection;
-      this.filters = [];
-
-     
-      var self = this;
-      this.activeFilters.on('model.change.active', function(evt, newVal,oldVal,model) {
-        if (newVal) {
-          self.addFilter(model);
-        } else {
-          self.filters.splice(self.filters.indexOf(model),1);
-        }
-      });
-    }
-
-
-    FilterView.prototype.addFilter = function(filter) {
-      this.filters.push(filter);
-      
-      return this.filters;
-    };
-
-
-    FilterView.prototype.process = function(imageData) {
-      for (var i = 0; i < this.filters.length; i++) {
-        var filter = this.filters[i];
-        var type = filter.get('type');
-
-        if (type === 'convolver') {
-          imageData = filter.convolve(imageData, filter.get('matrix'));
-        } else {
-          imageData.data = this.filters[i].filter(imageData);  
-        }
-      }
-
-      return imageData;
-    };
-
-    FilterView.prototype.constructor = FilterView;
-
-
-
-
-
     function AppController() {
       // sub view representing the canvas element
       this.canvasView = null;
       // subview representing the filter nodes
-      this.filtersView = new FilterView(document.querySelector('.filters'));
+      this.filtersView = new FilterCollectionView({
+        el: '.filters',
+        collection: filterCollection
+      });
 
       this.allowedAccessToCamera = false;
 
@@ -530,251 +532,6 @@
       }
 
       this.rfid = window.requestAnimationFrame(animationCallback);
-    };
-
-
-    // Take a snapshot with your browser
-    function PhotoBooth() {
-      // Do we have an active booth
-      this.active = false;
-
-      // The media stream object
-      this.stream = null;
-
-      // The booth itself
-      this.canvas = document.querySelector("canvas");
-
-      // The video element playing our camera feed.
-      this.video = document.getElementById("camera-input");
-
-      // The canvas context
-      this.canvasCtx = null;
-
-      // Has the user allowed camera access
-      this.allowedAccessToCamera = false;
-
-      // The aspect ratio
-      this.aspectRatio = null;
-
-      this.shouldStore = false;
-
-      this.filters = [];
-
-      this.height = this.canvas.height;
-      this.width = this.canvas.width;
-
-      this.canvas.width = this.width * 2;
-      this.canvas.height = this.height * 2;
-
-      this.canvas.style.width = this.width + 'px';
-      this.canvas.style.height = this.height + 'px';
-
-
-      this.canvas.getContext('2d').scale(2, 2);
-
-      this.requestAccess();
-      this.bindEvents();
-    }
-
-    PhotoBooth.prototype = {
-      bindEvents: function() {
-        document.getElementById("snapshot").addEventListener("click", this.takePhoto.bind(this));
-        document.getElementById("canvasBlur").addEventListener("input", this.blur.bind(this));
-        document.getElementById("stop").addEventListener("click", this.toggleVideo.bind(this));
-        var nodes = document.querySelectorAll(".filter")
-
-        for  (var i = 0; i < nodes.length; i++) {
-          nodes[i].addEventListener("click", this.addFilter.bind(this));
-        }
-
-        var convolvers = document.querySelectorAll(".convolver");
-
-        for  (var i = 0; i < convolvers.length; i++) {
-          convolvers[i].addEventListener("click", this.convolve.bind(this));
-        }
-
-        document.getElementById("reset").addEventListener("click", this.reset.bind(this));
-        document.getElementById("loop").addEventListener('click', this.store.bind(this))
-      },
-
-      store: function() {
-        if (this.shouldStore) {
-          dataBuffer.length = 0;
-        }
-
-        this.shouldStore = !this.shouldStore;
-      },
-
-      requestAccess: function() {
-        Services.UserMedia.getStream(function(stream) {
-          if (!stream) {
-            return console.log('No webcam acccess');
-          }
-          
-          new ViewScreen(document.querySelector('canvas'), stream);
-          this.stream = stream;
-          this.active = true;
-          this.allowedAccessToCamera = true;
-
-          this.video.src = window.URL.createObjectURL(this.stream);
-
-          this.video.addEventListener('loadeddata', this._onVideoDataReady.bind(this));
-        }.bind(this));
-      },
-
-      draw: function(time) {
-        var i = 0;
-
-        if (!this._isActive()) {
-          return window.cancelAnimationFrame(this.rfid);
-        }
-
-        this.canvasCtx.drawImage(this.video, 0, 0);
-        var output = imageData = this.canvasCtx.getImageData(0, 0, this.width*2, this.height*2);
-        
-
-        if (this.convolver) {
-          imageData = output = Filter.convolve(imageData, this.convolver.matrix);
-        }
-
-        if (this.filters.length != 0) {
-          while(i < this.filters.length) {
-            output.data = Filter[this.filters[i]](output);
-            i++;
-          }
-
-          this.canvasCtx.putImageData(output, 0, 0);
-        } else {
-          this.canvasCtx.putImageData(imageData, 0, 0);
-        }
-        var self = this;
-        
-        
-          if (dataBuffer === -1) {
-            dataBuffer = [];
-          } else if (dataBuffer.length === 0) {
-            dataBuffer = output;  
-          }
-
-        this.rfid =  window.requestAnimationFrame(self.draw.bind(self));
-        
-      },
-
-      _onVideoDataReady: function(evt) {
-        this.video.play();
-
-        this.canvasCtx = this.canvas.getContext("2d");
-
-        var output = imageData = null;
-
-        this.rfid = window.requestAnimationFrame(this.draw.bind(this));
-      },
-
-      addFilter: function(evt) {
-        if (!this.allowedAccessToCamera && !this._isActive) return false;
-
-        var selectedFilter = evt.currentTarget.value;
-
-        if (this.filters.indexOf(selectedFilter) !== -1) {
-          this.filters.splice(this.filters.indexOf(selectedFilter), 1);
-
-          return;
-        }
-
-        this.filters.push(selectedFilter);
-      },
-
-      convolve: function(evt) {
-        var convolver = evt.currentTarget.innerHTML.toLowerCase();
-
-        if (this.convolver && this.convolver.type === convolver) {
-          return this.convolver = null;
-        }
-
-        switch (convolver) {
-          case "laplace":
-            this.convolver = {
-              type: convolver,
-              matrix: [1,1,1,1,-8,1,1,1,1]
-            };
-            break;
-          case "sharpen":
-            this.convolver = {
-              type: convolver,
-              matrix: [0,-1,0,-1,5,-1,0,-1,0]
-            };
-            break;
-          case "blur":
-            var b = 1/9;
-            this.convolver = {
-              type: convolver,
-              matrix: [b,b,b,b,b,b,b,b,b]
-            };
-            break;
-          case "edge":
-            this.convolver = {
-              type: convolver,
-              matrix: [-6,-4,0,-10,10,1,0,4,6]
-            }
-            break;
-          case "emboss":
-            this.convolver = {
-              type: convolver,
-              matrix: [-2,-1,0,-1,1,1,0,1,2]
-            }
-            break;
-          case 'sobel':
-            this.convolver = {
-              type: convolver,
-              matrix: [-1,0,1,-2,0,2,-1,0,1]
-            }
-            break;
-        }
-      },
-
-      _isActive: function() {
-        return this.active && this.stream;
-      },
-
-      blur: function(event) {
-        if (!this._isActive()) return false;
-
-
-        var ctx = this.canvas.getContext("2d"),
-            currentAlpha = ctx.globalAlpha;
-
-        ctx.globalAlpha = +event.target.value;
-      },
-
-      toggleVideo: function() {
-        if (this._isActive()) {
-          this.video.pause();
-          this.active = false;
-        } else {
-          this.video.play();
-          this.active = true;
-          this.draw();
-        }
-      },
-
-      takePhoto: function(evt) {
-        //if (!this._isActive()) return false;
-
-        var anchor, click;
-
-        anchor = document.createElement("a");
-        anchor.href = this.canvas.toDataURL("image/png");
-        anchor.download = "image"+ +new Date() + ".png";
-
-        click = document.createEvent("Event");
-        click.initEvent("click", true, true);
-
-        anchor.dispatchEvent(click);
-      },
-
-      reset: function() {
-        this.filters.length = 0;
-      }
     };
 
     if (Services.Browser.isChrome()) {

@@ -16,7 +16,9 @@ var Services = {
 
     return {
       getStream: function(callback) {
-        if (hasRequestedAccess) return callback(mediaStream);
+        if (hasRequestedAccess) {
+          return callback(mediaStream);
+        }
 
         getUserMedia(
           {video:  {
