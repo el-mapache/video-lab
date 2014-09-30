@@ -27,10 +27,13 @@
     <button class="convolver {{=it.active}}" value='{{=it.name}}'>{{=it.name}}</button></br>
   </script>
   
-  <!--<script src="lib/flow-calculator.js"></script>
-  <script src="lib/flow-zone.js"></script>
-  <script src="lib/webcam-flow.js"></script>
-  <script src="lib/colors.js"></script>-->
+  <!-- OPTICAL FLOW LIBRARY -->
+  <script src="js/lib/oflow/flow-zone.js"></script>
+  <script src="js/lib/oflow/flow-calculator.js"></script>
+  <script src="js/lib/oflow/colors.js"></script>
+  <script src="js/lib/oflow/video-flow.js"></script>
+  <script src="js/lib/oflow/webcam-flow.js"></script>
+  
 
   <script src='js/dot.js'></script>
   <script src="js/util.js"></script>
@@ -49,6 +52,7 @@
   <script src="js/models/bayer-filter.js"></script>
   <script src="js/models/low-res.js"></script>
   <script src="js/models/xor-filter.js"></script>
+  <script src="js/models/and-filter.js"></script>
   <script src="js/models/median-filter.js"></script>
   <script src="js/models/sobel-filter.js"></script>
   <script src="js/models/laplace.js"></script>
@@ -98,6 +102,7 @@
         <div id='low-res'></div>
         <div id='bayer'></div>
         <div id='xor'></div>
+        <div id='and'></div>
       </div>
 
       <div style="float: left; margin-left: 20px; margin-right: 20px;">
@@ -120,13 +125,7 @@
         <div id='embossC'></div>
       </div>
     </div>
-    
-<!--
-    <input class="filter" type="checkbox" name="filter" value="bayerColor">Bayer 8Color<br>
-    <input class="filter" type="checkbox" name="filter" value="burnO">burn or<br>
-    <input class="filter" type="checkbox" name="filter" value="burnA">burn and<br> -->
-
-     <!--  <button class="convolver" value="edge">Edge</button> -->
+  
     
     <div id="image-data">
       <img src='' id="image-preview" height="150" width="150"/>
@@ -182,6 +181,7 @@
     var byf = new BayerFilter();
     var lrf = new LowResFilter();
     var xof = new XORFilter();
+    var and = new AndFilter();
     var mdf = new MedianFilter();
     var sbf = new SobelFilter();
     var lpf = new LaplaceFilter();
@@ -190,7 +190,7 @@
     var ebc = new EmbossConvolver();
 
     var filterCollection = new FilterCollection({
-      models: [gsf, cf, bf, sf, ivf, spf, ef, tf, byf, lrf, xof, mdf, sbf, lpf,shf,blf,ebc]
+      models: [gsf, cf, bf, sf, ivf, spf, ef, tf, byf, lrf, xof, mdf, sbf, lpf,shf,blf,ebc, and]
     });
 
     // Fixed Filters
@@ -201,6 +201,7 @@
     new FixedFilterView({el: '#low-res', model: lrf}).render();
     new FixedFilterView({el: '#bayer', model: byf}).render();
     new FixedFilterView({el: '#xor', model: xof}).render(); 
+    new FixedFilterView({el: '#and', model: and}).render(); 
 
     new VariableFilterView({el: '#saturation', model: sf}).render();
     new VariableFilterView({el: '#contrast', model: cf}).render();
@@ -234,75 +235,6 @@
     };
 
     var Filter = {
-      convolverActive: false,
-
-
-      burnX: function(imageData) {
-        var l = imageData.data.length,
-            data = imageData.data,
-            i = 0,
-            r,g,b;
-
-        var buffer = dataBuffer.data;
-
-        for (i; i < l; i += 4) {
-          r = data[i];
-          g = data[i+1];
-          b = data[i+2];
-
-
-          data[i] =   r ^ (data[i / 2] || 255);//(data[i +100] || 255);
-          data[i+1] = g ^ (data[i - 20000] || 255);
-          data[i+2] = b ^ (data[i * 2] || 255);
-        }
-
-        return data
-      },
-
-      burnO: function(imageData) {
-        var l = imageData.data.length,
-            data = imageData.data,
-            i = 0,
-            r,g,b;
-
-        var buffer = dataBuffer.data;
-
-        for (i; i < l; i += 4) {
-          r = data[i];
-          g = data[i+1];
-          b = data[i+2];
-
-
-          data[i] =   r | (data[i / 2] || 255);//(data[i +100] || 255);
-          data[i+1] = g | (data[i - 20000] || 255);
-          data[i+2] = b | (data[i * 2] || 255);
-        }
-
-        return data
-      },
-
-      burnA: function(imageData) {
-        var l = imageData.data.length,
-            data = imageData.data,
-            i = 0,
-            r,g,b;
-
-        var buffer = dataBuffer.data;
-
-        for (i; i < l; i += 4) {
-          r = data[i];
-          g = data[i+1];
-          b = data[i+2];
-
-
-          data[i] =   r & (data[i / 2] || 255);//(data[i +100] || 255);
-          data[i+1] = g & (data[i - 20000] || 255);
-          data[i+2] = b & (data[i * 2] || 255);
-        }
-
-        return data
-      },
-
       bayerColor: function(imageData) {
         var w = imageData.width;
         var data = imageData.data;
@@ -334,35 +266,6 @@
         return data;
       }
     };
-
-    // var calculator = new FlowCalculator(zoneSize || 8),
-    //     oldImage. newImage;
-
-    // function WebcamFlow(videoTag, zoneSize) {
-    //   var isCapturing,
-    //     calculatedCallbacks = [],
-    //     gotFlow = function(direction) {
-    //       calculatedCallbacks.forEach(function (callback) {
-    //         callback(direction);
-    //       });
-    //     };
-      
-    //   var videoFlow = new VideoFlow(this.backingVideo, 4);
-
-    //   this.startCapture = function () {
-    //     videoFlow.startCapture(videoTag);
-    //     videoFlow.onCalculated(gotFlow);
-    //   };
-
-    //   this.onCalculated = function (callback) {
-    //     calculatedCallbacks.push(callback);
-    //   };
-
-    //   this.stopCapture = function() {
-    //     if (videoFlow) { videoFlow.stopCapture(); }
-    //     if (videoTag) { videoTag.pause(); }
-    //   };
-    // }
 
     function CanvasView(el, stream) {
       // Whether or not the view screen is receiving data.
@@ -433,8 +336,8 @@
         this.canvasContext.drawImage(this.backingVideo, 0, 0);
       }
 
-      var data = this.canvasContext.getImageData(0, 0, this.width*2, this.height*2);
-     // this.canvasContext.transform(1,0.5,-0.5,1,10,10);
+      var data = this.canvasContext.getImageData(0, 0, this.width, this.height);
+
       return data;
     };
 
@@ -459,6 +362,33 @@
       return true;
     };
 
+    CanvasView.prototype.drawFlow = function(direction) {
+      var ctx = this.canvasContext;
+      ctx.clearRect(0, 0, this.width, this.height);
+      
+      for(var i = 0; i < direction.zones.length; ++i) {
+        var zone = direction.zones[i];
+        
+      
+      var distance = Math.pow(zone.x - (zone.x - zone.u),2) + Math.pow(zone.y - (zone.y + zone.v),2);
+      
+        if (distance < 20) {
+          continue;
+        }
+
+        ctx.strokeStyle = getDirectionalColor(zone.u, zone.v);
+        ctx.beginPath();
+        ctx.moveTo(zone.x,zone.y);
+       
+        ctx.lineTo((zone.x - zone.u), zone.y + zone.v);
+       
+        ctx.lineWidth = 5;
+        ctx.stroke();
+      }
+
+      return true;
+    };
+
     CanvasView.prototype.isActive = function() {
       return this.active;
     };
@@ -480,6 +410,12 @@
 
     CanvasView.prototype.constructor = CanvasView;
 
+    
+    // function FlowController() {
+    //   this.webcamFlow = 
+    // }
+
+    // FlowController.prototype.constructor = FlowController;
 
 
     function AppController() {
@@ -491,9 +427,15 @@
         collection: filterCollection
       });
 
+      this.webCamFlow = new OFlow.WebCamFlow(new OFlow.VideoFlow(20));
+      
+      this.webCamFlow.onCalculated(function(direction) {
+        this.canvasView.drawFlow(direction);
+      }.bind(this));
+
       this.allowedAccessToCamera = false;
 
-      // Pointer to the id of the current animation frame
+      // Pointer to the current animation frame handler
       this.rfid = null;
 
       this.initialize();
@@ -501,7 +443,7 @@
 
 
     AppController.prototype.initialize = function() {
-      Services.UserMedia.getStream(this.onAfterStreamRequest.bind(this));
+      Services.UserMedia.getVideoStream(this.onAfterStreamRequest.bind(this));
     };
 
     AppController.prototype.onAfterStreamRequest = function(stream) {
@@ -520,18 +462,27 @@
 
       function animationCallback() {
         var transformedData = self.filtersView.process(self.canvasView.getPixels()); 
-        var shouldKeepDrawing = self.canvasView.draw(transformedData);
+        
+        
+          var shouldKeepDrawing = self.canvasView.draw(transformedData);
+        
+        
+        
+        self.webCamFlow.calculate(transformedData.data, self.canvasView.width, self.canvasView.height);
+        
+        
+        // var shouldKeepDrawing = true;
+        // if (!shouldKeepDrawing) {
+        //   window.cancelAnimationFrame(self.rfid);
+        //   self.rfid = null;
+        //   return;
+        // }
 
-        if (!shouldKeepDrawing) {
-          window.cancelAnimationFrame(self.rfid);
-          self.rfid = null;
-          return;
-        }
-
-        self.rfid = window.requestAnimationFrame(animationCallback);
+        // self.rfid = window.requestAnimationFrame(animationCallback);
       }
-
-      this.rfid = window.requestAnimationFrame(animationCallback);
+      
+      setInterval(animationCallback, 100);
+     // this.rfid = window.requestAnimationFrame(animationCallback);
     };
 
     if (Services.Browser.isChrome()) {

@@ -18,7 +18,7 @@ var FilterCollectionView = VL.View.extend({
 
   process: function(imageData) {
     this.activeFilters.each(function(filter) {
-      var type = filter.get('type');
+      var type = filter.get('type'); 
 
       if (type === 'convolver') {
         imageData = filter.convolve(imageData, filter.get('matrix'));
