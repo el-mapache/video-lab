@@ -41,7 +41,7 @@ var Services = {
     };    
   }()),
   Browser: (function() {
-    var CHROME_REGEX = /Chrome\/(2{1}9{1}|3{1}[0-9])/;
+    var CHROME_REGEX = /Chrome/;
 
     return {
       isChrome: function() {

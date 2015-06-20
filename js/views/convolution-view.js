@@ -15,3 +15,4 @@ var ConvolutionFilterView = VL.View.extend({
     this.render();
   }
 });
+
