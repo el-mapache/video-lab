@@ -81,7 +81,6 @@
     <button id="stop">Stop</button>
     <button id="feedback">Feedback</button>
     <button id="reset">Reset</button>
-    <button id="h-scan">Horizontal Scanline</button>
 
     <button id='loop'>Store last second of video</button>
 
@@ -261,10 +260,6 @@
 
       function animationCallback() {
         var transformedData = self.filtersView.process(self.canvasView.getPixels());
-
-        // SCANLINE CODE
-        //var transformedData = self.canvasView.getHorizontalScanline();
-        // END SCANLINE CODE
 
         // var d = transformedData.data;
         // var l = d.length;
