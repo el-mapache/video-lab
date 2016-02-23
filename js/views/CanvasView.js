@@ -58,15 +58,18 @@ CanvasView.prototype.getImageData = function() {
   return this.canvasContext.getImageData(0, 0, this.width, this.height);
 };
 
+// Get all the pixels on current canvas
 CanvasView.prototype.getPixels = function() {
   if (!this.isActive()) {
     return null;
   }
 
   if (!this.feedback) {
+    // draw current frame of video from the in-memory video tag to the canvas
     this.canvasContext.drawImage(this.backingVideo, 0, 0);
   }
 
+  // Get the pixel data we just wrote to the virtual canvas
   var data = this.getImageData();
 
   return data;

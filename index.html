@@ -127,39 +127,6 @@
   </div>
 
   <script>
-    var currentFile = null;
-    var reader = new FileReader();
-    var imageCanvas = document.createElement('canvas');
-    var imgEl = document.getElementById('image-preview');
-    var currentFileData = null;
-
-    reader.onload = function(event) {
-      var img = new Image();
-
-      img.onload = function() {
-        imageCanvas.width = img.width * 2;
-        imageCanvas.height = img.height * 2;
-        var context = imageCanvas.getContext('2d');
-
-        context.drawImage(img, 0, 0);
-
-        currentFileData = context.getImageData(0,0,this.width *2 , this.height *2).data;
-
-        imgEl.src = this.src;
-      };
-
-      img.src = event.target.result;
-    };
-
-    document.getElementById('file-upload').addEventListener('change', function(event) {
-      var file = event.currentTarget.files[0];
-
-      if (file) {
-        currentFile = file;
-        reader.readAsDataURL(file);
-      }
-    });
-
     var gsf = new GrayscaleFilter();
     var bf = new BrightnessFilter();
     var cf = new ContrastFilter();
@@ -260,51 +227,6 @@
 
       function animationCallback() {
         var transformedData = self.filtersView.process(self.canvasView.getPixels());
-
-        // var d = transformedData.data;
-        // var l = d.length;
-        // var iterator = 0;
-        // var max = (Math.random() * 30) | 0
-
-         // var canvas = self.canvasView.canvas;
-         // var w = canvas.width
-
-        //var randomNumber = Math.random();
-        // while (iterator < max) {
-        //  //  for (var c = 0; c < w; c++) {
-        //  //    for (var r = 0; r <= l; r += ((4 * w) + (c * 4))) {
-        //  //      //if (c < (l >> 1)) {
-        //  //        var b = c >> iterator;
-        //  //        d[b+2] = d[b + (50 * Math.random())];
-        //  //        //d[b+1] = d[b+400 * Math.random()];
-        //  //        //d[b+2] = d[b+400 * Math.random()];
-        //  //      //} else {
-        //  //      //  var b = c >> iterator;
-        //  //      //  d[b+2] = d[b+2+50];
-        //  //    //  }
-        //  //    }
-        //  //  }
-
-        //   for (var i = 0; i < l; i += 4) {
-        //     if (i < (l >> 1)) {
-        //       var b = i << iterator;
-        //       d[b] = d[b + 50];
-        //       //d[b+1] = d[b+400 * Math.random()];
-        //       d[b+2] = d[b+51 * Math.random()];
-        //     } else {
-        //       //var rand = Math.random();
-        //      /// if (rand < 0.5) {
-        //         var b = i >> iterator;
-        //         //d[b+2] = d[b+2+50];
-        //      // } else {
-        //        // var b = i & iterator;
-        //      // }
-        //       d[b+2] = d[b+2+50];
-        //     }
-        //   }
-        //   iterator++;
-        // }
-
         var shouldKeepDrawing = self.canvasView.draw(transformedData);
 
          if (!shouldKeepDrawing) {
