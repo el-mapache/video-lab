@@ -1,6 +1,6 @@
 (function(root) {
   root.VL = root.VL || {};
-  
+
   var EventEmitter = function() {};
 
   EventEmitter.prototype = {
@@ -24,16 +24,16 @@
     trigger: function(event) {
       this._events = this._events || {};
       var events = this._events[event] || [];
-      
+
       var handlerCount = 0;
       var len = events.length;
-      
+
       var allEvents = this._events['all'];
 
       if (allEvents) {
         var currEventCount = 0;
         var length = allEvents.length;
-        
+
         while (currEventCount < length) {
           var handlerObj = allEvents[currEventCount];
 
@@ -70,7 +70,7 @@
 
   var Collection = function(options) {
     options = options || {};
-    
+
     this.length = 0;
     this.modelsLookup = {};
     this.models = [];
@@ -88,9 +88,9 @@
       }
 
       models = models instanceof Array ? models : [models];
-      
+
       Utils.forEach(models, this._addModel.bind(this));
-      
+
       return this;
     },
 
@@ -114,7 +114,7 @@
       this.models.forEach(function(model, index) {
         lookup[model.id] = index;
       });
-      
+
       this.trigger('collection.remove', removed, this);
 
       return this;
@@ -195,9 +195,28 @@
     set: function(prop, value) {
       var attrs = this.attributes;
 
-      if (!attrs.hasOwnProperty(prop)) return;
+      if (typeof prop === 'object') {
+        // copy attrs so we can emit the old state
+        var oldAttrs = Object.assign({}, attrs);
 
-      // Stpre a reference to the previous value to determine whether a 
+        for (var attr in prop) {
+          attrs[attr] = prop[attr];
+          if (oldAttrs[attr] !== attrs[attr]) {
+            this.trigger('model.change.' + attr, attrs[attr], oldAttrs[attr], this);
+          }
+        }
+
+        oldAttrs = null;
+
+        return this;
+      }
+
+      // If the model doesnt contain the property we want to update, ignore it.
+      if (!attrs.hasOwnProperty(prop)) {
+        return;
+      }
+
+      // Store a reference to the previous value to determine whether a
       // 'change' event should fire.
       var old = attrs[prop];
 
@@ -254,7 +273,7 @@
     render: function() {
       return this;
     },
-    
+
     init: function(options) {
       return this;
     },
@@ -262,7 +281,7 @@
     find: function(selector) {
       return this.el.querySelector(selector);
     },
-    
+
     _setFromOptions: function(options) {
       var OPTIONS = ['template', 'el', 'model', 'collection'];
 
@@ -298,7 +317,7 @@
           throw new Error('Method not found on view.');
         }
 
-        // An event pair is comprised of a selector, followed by 
+        // An event pair is comprised of a selector, followed by
         // the name of the event to lsiten for.
         var eventPair = event.split(' ');
 
@@ -320,7 +339,7 @@
       parent.addEventListener(eventName, isEventTarget.bind(this));
     }
   });
-  
+
   root.VL.Events.prototype.attachTo(View);
 
   root.VL.View = View;
@@ -347,7 +366,7 @@
 
     Ancestor.prototype = parent.prototype;
     child.prototype = new Ancestor;
-    
+
     if (proto) {
       Utils.extend(child.prototype, proto, staticP);
     }

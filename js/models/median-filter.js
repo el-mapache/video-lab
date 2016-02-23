@@ -15,12 +15,12 @@ var MedianFilter = VL.Model.extend({
         w = srcData.width,
         dstPixels = pixels = srcData.data,
         neighbors = [],
-        filterSize = this.attributes.currentValue,
+        filterSize = this.get('currentValue'),
         edge = filterSize,
         halfEdge = (edge >> 1) | 0;
-
+    
     // We need to loop through every pixel of the source image
-    for (var x = 0; x < w; ++x) {
+    for (var x = 3; x < w; ++x) {
       for (var y = 0; y < h; ++y) {
         // Maintain a separate variable to act as an accessor
         // for the neighbors array, reset on each iteration
@@ -34,8 +34,7 @@ var MedianFilter = VL.Model.extend({
         // move over our pixels to get all neighboring values
         for (var xx = 0; xx < edge; ++xx) {
           for (var yy = 0; yy < edge; ++yy) {
-            // get the x and y coords of where our lil'
-            // window is right now in the image
+            // get the x and y coords of where our lil' window is in the image
             var scx = x + xx - halfEdge;
             var scy = y + yy - halfEdge;
 
@@ -43,12 +42,12 @@ var MedianFilter = VL.Model.extend({
             if ( scx >= 0 && scx < w && scy >= 0 && scy < h) {
 
               var windowPos = (scy * w + scx) << 2;
-              
+
               // Stuff the color data into a single int
               var result = pixels[windowPos] << 24; // roy
               result |= pixels[++windowPos] << 16; // gee
               result |= pixels[++windowPos] << 8; // biv
-              
+
               neighbors[count] = result;
               count++;
             }

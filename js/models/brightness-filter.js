@@ -19,7 +19,7 @@ var BrightnessFilter = VL.Model.extend({
 
   filter: function(imageData) {
     var data = imageData.data;
-    
+
     var length = data.length;
     var ii = -4;
 
@@ -39,7 +39,7 @@ var BrightnessFilter = VL.Model.extend({
 
       output = ii + value;
 
-      this.lookup[ii] = output;  
+      this.lookup[ii] = output;
     }
   },
 

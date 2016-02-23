@@ -13,7 +13,17 @@ var VariableFilterView = VL.View.extend({
   },
 
   toggleFilter: function(event) {
-    this.model.set('active', event.target.checked);
+    var isToggled = event.target.checked;
+
+    var newState = {
+      active: isToggled
+    };
+
+    if (isToggled) {
+      newState['currentValue'] = +this.el.querySelector('.variable-filter').value;
+    }
+
+    this.model.set(newState);
   },
 
   changeModelValue: function(event) {

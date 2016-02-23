@@ -26,7 +26,8 @@
   <script type="text/template" id="convolver">
     <button class="convolver {{=it.active}}" value='{{=it.name}}'>{{=it.name}}</button></br>
   </script>
-  
+
+  <script src='js/lib/LinkedList.js'></script>
   <script src='js/dot.js'></script>
   <script src="js/util.js"></script>
   <script src="js/services.js"></script>
@@ -51,7 +52,7 @@
   <script src="js/models/sharpen.js"></script>
   <script src="js/models/blur.js"></script>
   <script src="js/models/emboss.js"></script>
-  
+
   <script src="js/collections/filter-collection.js"></script>
 
   <script src="js/views/filter-view.js"></script>
@@ -64,7 +65,7 @@
 </head>
 <body>
   <video id="camera-input"></video>
-  <canvas width="640" height="360"></canvas>
+  <canvas width="480" height="360"></canvas>
   <br>
   <div style='float:right; margin-right:200px;'>
     <div id='cc'></div>
@@ -80,6 +81,7 @@
     <button id="stop">Stop</button>
     <button id="feedback">Feedback</button>
     <button id="reset">Reset</button>
+    <button id="h-scan">Horizontal Scanline</button>
 
     <button id='loop'>Store last second of video</button>
 
@@ -117,8 +119,7 @@
         <div id='embossC'></div>
       </div>
     </div>
-  
-    
+
     <div id="image-data">
       <img src='' id="image-preview" height="150" width="150"/>
       <input type="file" id="file-upload" accept="image/gif, image/jpeg, image/png"/>
@@ -144,7 +145,7 @@
         context.drawImage(img, 0, 0);
 
         currentFileData = context.getImageData(0,0,this.width *2 , this.height *2).data;
-        
+
         imgEl.src = this.src;
       };
 
@@ -159,7 +160,7 @@
         reader.readAsDataURL(file);
       }
     });
-    
+
     var gsf = new GrayscaleFilter();
     var bf = new BrightnessFilter();
     var cf = new ContrastFilter();
@@ -190,8 +191,8 @@
     new FixedFilterView({el: '#emboss', model: ef}).render();
     new FixedFilterView({el: '#low-res', model: lrf}).render();
     new FixedFilterView({el: '#bayer', model: byf}).render();
-    new FixedFilterView({el: '#xor', model: xof}).render(); 
-    new FixedFilterView({el: '#and', model: and}).render(); 
+    new FixedFilterView({el: '#xor', model: xof}).render();
+    new FixedFilterView({el: '#and', model: and}).render();
 
     new VariableFilterView({el: '#saturation', model: sf}).render();
     new VariableFilterView({el: '#contrast', model: cf}).render();
@@ -204,7 +205,6 @@
     new ConvolutionFilterView({el: '#sharpen', model: shf}).render();
     new ConvolutionFilterView({el: '#blur', model: blf}).render();
     new ConvolutionFilterView({el: '#embossC', model: ebc}).render();
-   
 
     var hdConstraints = {
       video: {
@@ -250,8 +250,8 @@
         return console.log('User denied access to their webcam.');
       }
 
-      this.allowedAccessToCamera = true;  
-      
+      this.allowedAccessToCamera = true;
+
       this.canvasView = new CanvasView(document.querySelector('canvas'), stream);
       this.canvasView.on('ON_VIDEO_LOAD', this.startAnimationLoop.bind(this));
     };
@@ -260,34 +260,58 @@
       var self = this;
 
       function animationCallback() {
-        var transformedData = self.filtersView.process(self.canvasView.getPixels()); 
-        
-      //  var d = transformedData.data;
-      //  var l = d.length;
-      //  var it = 0;
-      //  var max = (Math.random() * 20) | 0
+        var transformedData = self.filtersView.process(self.canvasView.getPixels());
 
-      //  while (it < max) {
-      //    for (var i = 0; i < l; i+=4) {
-      //     // if (Math.random() * 100 > 10) {
-      //      if (i < (l >> 1)) {
-      //      var b = i << it;
-      //      d[b] = d[b+50];
-      //        d[b+1] = d[b+51*Math.random()];
-      //       d[b+2] = d[b+52 * Math.random()];
-      //     // }
-      //     } else {
-      //      var b = i;// >> it;
-      //     d[b+2] = d[b+2+50];
-      //     }
-      //    }
-      //    it++;
-      //  }
-        
-        
+        // SCANLINE CODE
+        //var transformedData = self.canvasView.getHorizontalScanline();
+        // END SCANLINE CODE
+
+        // var d = transformedData.data;
+        // var l = d.length;
+        // var iterator = 0;
+        // var max = (Math.random() * 30) | 0
+
+         // var canvas = self.canvasView.canvas;
+         // var w = canvas.width
+
+        //var randomNumber = Math.random();
+        // while (iterator < max) {
+        //  //  for (var c = 0; c < w; c++) {
+        //  //    for (var r = 0; r <= l; r += ((4 * w) + (c * 4))) {
+        //  //      //if (c < (l >> 1)) {
+        //  //        var b = c >> iterator;
+        //  //        d[b+2] = d[b + (50 * Math.random())];
+        //  //        //d[b+1] = d[b+400 * Math.random()];
+        //  //        //d[b+2] = d[b+400 * Math.random()];
+        //  //      //} else {
+        //  //      //  var b = c >> iterator;
+        //  //      //  d[b+2] = d[b+2+50];
+        //  //    //  }
+        //  //    }
+        //  //  }
+
+        //   for (var i = 0; i < l; i += 4) {
+        //     if (i < (l >> 1)) {
+        //       var b = i << iterator;
+        //       d[b] = d[b + 50];
+        //       //d[b+1] = d[b+400 * Math.random()];
+        //       d[b+2] = d[b+51 * Math.random()];
+        //     } else {
+        //       //var rand = Math.random();
+        //      /// if (rand < 0.5) {
+        //         var b = i >> iterator;
+        //         //d[b+2] = d[b+2+50];
+        //      // } else {
+        //        // var b = i & iterator;
+        //      // }
+        //       d[b+2] = d[b+2+50];
+        //     }
+        //   }
+        //   iterator++;
+        // }
+
         var shouldKeepDrawing = self.canvasView.draw(transformedData);
-        
-         var shouldKeepDrawing = true;
+
          if (!shouldKeepDrawing) {
            window.cancelAnimationFrame(self.rfid);
            self.rfid = null;
@@ -296,9 +320,10 @@
 
          self.rfid = window.requestAnimationFrame(animationCallback);
       }
-      
+
       this.rfid = window.requestAnimationFrame(animationCallback);
     };
+
 
     if (Services.Browser.isChrome()) {
       new AppController();

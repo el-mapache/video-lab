@@ -26,9 +26,10 @@ var BayerColorFilter = VL.Model.extend({
     var length = data.length;
 
     while ((i = i + 12) < length) {
+      // get a random color from our bayer table.
       var pixVal = (((8 * (data[i]+data[i+1]+data[i+2])) / 765) | 0) + 1;
       var newcolor = this.BAYER_COLOR[pixVal];
-      
+
       data[i]   = newcolor[0];
       data[i+1] = newcolor[1];
       data[i+2] = newcolor[2];
@@ -37,4 +38,3 @@ var BayerColorFilter = VL.Model.extend({
     return data;
   }
 });
-

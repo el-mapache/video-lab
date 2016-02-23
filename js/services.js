@@ -1,15 +1,19 @@
 var Services = {
+  // Wrapper for the get user media api.
   UserMedia: (function() {
     var self = this;
 
+    // the video stream we are requesting.
     var mediaStream = null;
+
+    // flag indicating whether or not the user has been asked for access to
+    // their audio/video hardware by the program.
     var hasRequestedAccess = false;
 
     function getUserMedia(opts, onSuccess, onError) {
-      navigator.getUserMedia = navigator.mozGetUserMedia    || 
+      navigator.getUserMedia = navigator.mozGetUserMedia    ||
                                navigator.webkitGetUserMedia ||
                                navigator.getUserMedia;
-        
 
       navigator.getUserMedia(opts, onSuccess, onError);
     }
@@ -20,13 +24,13 @@ var Services = {
           return callback(mediaStream);
         }
 
-        getUserMedia(
-          {video:  {
+        getUserMedia({
+          video: {
             mandatory: {
               maxWidth: 640,
               maxHeight: 360
-            }}
-          },
+            }
+          }},
           function(stream) {
             mediaStream = stream;
             hasRequestedAccess = true;
@@ -38,7 +42,7 @@ var Services = {
           }
         );
       }
-    };    
+    };
   }()),
   Browser: (function() {
     var CHROME_REGEX = /Chrome/;

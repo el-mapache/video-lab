@@ -18,16 +18,15 @@ var FilterCollectionView = VL.View.extend({
 
   process: function(imageData, zones) {
     this.activeFilters.each(function(filter) {
-      var type = filter.get('type'); 
+      var type = filter.get('type');
 
       if (type === 'convolver') {
         imageData = filter.convolve(imageData, filter.get('matrix'));
       } else {
-        imageData.data = filter.filter(imageData, zones);  
+        imageData.data = filter.filter(imageData, zones);
       }
     });
-    
+
     return imageData;
   }
 });
-
