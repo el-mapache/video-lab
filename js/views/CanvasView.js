@@ -65,7 +65,7 @@ CanvasView.prototype.getPixels = function() {
   }
 
   if (!this.feedback) {
-    // draw current frame of video from the in-memory video tag to the canvas
+    // draw the current frame of video from the in-memory video tag to the canvas
     this.canvasContext.drawImage(this.backingVideo, 0, 0);
   }
 
@@ -96,10 +96,7 @@ CanvasView.prototype.takePhoto = function(evt) {
   anchor.href = this.canvas.toDataURL("image/png");
   anchor.download = "image"+ +new Date() + ".png";
 
-  click = document.createEvent("Event");
-  click.initEvent("click", true, true);
-
-  anchor.dispatchEvent(click);
+  anchor.dispatchEvent(new MouseEvent('click'));
 };
 
 CanvasView.prototype.constructor = CanvasView;

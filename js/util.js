@@ -15,7 +15,7 @@
 
   var extend = function(dest) {
     var args = [].slice.call(arguments, 1);
-    
+
     if (!dest) return;
 
     while (args.length != 0) {
