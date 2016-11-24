@@ -58,6 +58,10 @@ CanvasView.prototype.getImageData = function() {
   return this.canvasContext.getImageData(0, 0, this.width, this.height);
 };
 
+CanvasView.prototype.getDataURL = function() {
+  return this.canvas.toDataURL('image/jpeg');
+};
+
 // Get all the pixels on current canvas
 CanvasView.prototype.getPixels = function() {
   if (!this.isActive()) {
@@ -80,7 +84,12 @@ CanvasView.prototype.draw = function(imageData) {
     return false;
   }
 
-  this.canvasContext.putImageData(imageData, 0, 0);
+  if (imageData instanceof Image) {
+    this.canvasContext.drawImage(imageData, 0, 0);
+  } else {
+
+    this.canvasContext.putImageData(imageData, 0, 0);
+  }
 
   return true;
 };

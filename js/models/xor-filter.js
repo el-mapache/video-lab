@@ -6,14 +6,12 @@ var XORFilter = VL.Model.extend({
     'potential':    'fixed'
   },
 
-	filter: function(imageData, direction) {
+	filter: function(imageData) {
 		var data = imageData.data;
     var l = data.length;
 
     var ii = -4;
     var r,g,b;
-    var zone = null;
-
 
     while (l > 0) {
       ii = l
