@@ -1,4 +1,6 @@
-var BayerFilter = VL.Model.extend({
+import { Model } from './framework';
+
+const BayerFilter = Model.extend({
   MATRIX:[3,7,4,6,1,9,2,8,5],
   defaults: {
     'name':        'bayer',
@@ -35,3 +37,5 @@ var BayerFilter = VL.Model.extend({
     return data;
   }
 });
+
+export default BayerFilter;

@@ -1,4 +1,6 @@
-var InversionFilter = VL.Model.extend({
+import { Model } from './framework';
+
+const InversionFilter = Model.extend({
   defaults: {
     'name':        'invert',
     'type':        'filter',
@@ -31,3 +33,5 @@ var InversionFilter = VL.Model.extend({
     }
   }
 });
+
+export default InversionFilter;

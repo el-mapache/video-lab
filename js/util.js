@@ -1,46 +1,46 @@
-  function nearestNeighbor(pixels, x, y, offset, width) {
-    return pixels[offset + Math.round(y) * width * 4 + Math.round(x) * 4];
+  // function nearestNeighbor(pixels, x, y, offset, width) {
+  //   return pixels[offset + Math.round(y) * width * 4 + Math.round(x) * 4];
+  // }
+  //
+  // function nearestNeighborUnrolled(pixels, x, y, width) {
+  //   var yw4x4 = ((y + 0.5) ^ 0) * width * 4 + ((x + 0.5) ^ 0) * 4;
+  //   return [
+  //     pixels[yw4x4],
+  //     pixels[yw4x4 + 1],
+  //     pixels[yw4x4 + 2]
+  //   ]
+  // }
+
+const Utils = {};
+
+const extend = function(dest) {
+  var args = [].slice.call(arguments, 1);
+
+  if (!dest) return;
+
+  while (args.length != 0) {
+    var source = args.shift();
+    for (var prop in source)  {
+      dest[prop] = source[prop];
+    }
   }
 
-  function nearestNeighborUnrolled(pixels, x, y, width) {
-    var yw4x4 = ((y + 0.5) ^ 0) * width * 4 + ((x + 0.5) ^ 0) * 4;
-    return [
-      pixels[yw4x4],
-      pixels[yw4x4 + 1],
-      pixels[yw4x4 + 2]
-    ]
+  return dest;
+};
+
+const forEach = function(list, callback) {
+  var ii = -1;
+  var length = list.length;
+
+  while (++ii < length) {
+    callback(list[ii], ii, list);
   }
-(function(root) {
-  root.Utils = {};
+};
 
-  var extend = function(dest) {
-    var args = [].slice.call(arguments, 1);
-
-    if (!dest) return;
-
-    while (args.length != 0) {
-      var source = args.shift();
-      for (var prop in source)  {
-        dest[prop] = source[prop];
-      }
-    }
-
-    return dest;
-  };
-
-  var forEach = function(list, callback) {
-    var ii = -1;
-    var length = list.length;
-
-    while (++ii < length) {
-      callback(list[ii], ii, list);
-    }
-  };
-
-  root.Utils.extend = extend;
-  root.Utils.forEach = forEach;
-}(window))
-
+export default {
+  extend,
+  forEach
+};
 
   /*
    * Insanely basic function to allow the programmer to choose
@@ -54,22 +54,22 @@
    * @param {interval} Integer The number of milliseconds to wait before
    *                   executing the callback
    */
-  function setAnimationType(interval) {
-   if (typeof interval !== "undefined") {
-
-     window.requestAnimationFrame = (function(interval) {
-       // cache the requested interval
-       var interval = interval;
-
-       // return an anonymous function and execute the timeout
-       return function(callback) {
-         return window.setInterval(callback, interval);
-       };
-
-      })(interval);
-    };
-
-    window.cancelAnimationFrame = function(id) {
-      clearInterval(id);
-    };
-  }
+  // function setAnimationType(interval) {
+  //  if (typeof interval !== "undefined") {
+  //
+  //    window.requestAnimationFrame = (function(interval) {
+  //      // cache the requested interval
+  //      var interval = interval;
+  //
+  //      // return an anonymous function and execute the timeout
+  //      return function(callback) {
+  //        return window.setInterval(callback, interval);
+  //      };
+  //
+  //     })(interval);
+  //   };
+  //
+  //   window.cancelAnimationFrame = function(id) {
+  //     clearInterval(id);
+  //   };
+  // }

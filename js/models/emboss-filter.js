@@ -1,4 +1,6 @@
-var EmbossFilter = VL.Model.extend({
+import { Model } from './framework';
+
+const EmbossFilter = Model.extend({
   defaults: {
     'name':        'emboss',
     'type':        'filter',
@@ -23,3 +25,5 @@ var EmbossFilter = VL.Model.extend({
     return imageData;
   }
 });
+
+export default EmbossFilter;

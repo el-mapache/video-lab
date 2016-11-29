@@ -1,0 +1,22 @@
+{
+  "name": "video-lab",
+  "version": "0.0.2",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo env"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/el-mapache/video-lab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-polyfill": "^6.16.0",
+    "babel-preset-latest": "^6.16.0",
+    "html-loader": "^0.4.4",
+    "webpack-node-externals": "^1.5.4"
+  }
+}

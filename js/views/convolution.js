@@ -1,5 +1,9 @@
-var ConvolutionFilterView = VL.View.extend({
-  template: document.getElementById('convolver').innerHTML,
+import VL from '../framework';
+import doT from '../dot.js';
+const template = require('../templates/convolver.html');
+
+const ConvolutionFilterView = VL.View.extend({
+  template: template,
 
   events: {
     '.convolver click': 'toggleFilter'
@@ -16,3 +20,4 @@ var ConvolutionFilterView = VL.View.extend({
   }
 });
 
+export default ConvolutionFilterView;

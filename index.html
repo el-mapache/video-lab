@@ -23,29 +23,23 @@
     <input class="filter" type="checkbox" name="filter" value="{{=it.name}}">{{=it.name}}<br>
   </script>
 
-  <script type="text/template" id="convolver">
+  <!-- <script type="text/template" id="convolver">
     <button class="convolver {{=it.active}}" value='{{=it.name}}'>{{=it.name}}</button></br>
-  </script>
+  </script> -->
 
+  <script src="build.js"></script>
   <script src='js/lib/LinkedList.js'></script>
   <script src='js/dot.js'></script>
-  <script src="js/util.js"></script>
+
   <script src="js/services.js"></script>
-  <script src="js/framework.js"></script>
+
 
   <script src="js/models/convolver.js"></script>
-  <script src="js/models/grayscale-filter.js"></script>
-  <script src="js/models/contrast-filter.js"></script>
-  <script src="js/models/brightness-filter.js"></script>
   <script src="js/models/saturation-filter.js"></script>
-  <script src="js/models/inversion-filter.js"></script>
   <script src="js/models/sepia-filter.js"></script>
-  <script src="js/models/emboss-filter.js"></script>
   <script src="js/models/threshold-filter.js"></script>
-  <script src="js/models/bayer-filter.js"></script>
   <script src="js/models/low-res.js"></script>
   <script src="js/models/xor-filter.js"></script>
-  <script src="js/models/and-filter.js"></script>
   <script src="js/models/median-filter.js"></script>
   <script src="js/models/sobel-filter.js"></script>
   <script src="js/models/laplace.js"></script>
@@ -57,7 +51,7 @@
 
   <script src="js/views/filter-view.js"></script>
   <script src="js/views/variable-filter.js"></script>
-  <script src="js/views/convolution-view.js"></script>
+
   <script src="js/views/filter-collection-view.js"></script>
 
   <script src="js/views/CanvasView.js"></script>

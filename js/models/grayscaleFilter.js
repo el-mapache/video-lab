@@ -1,4 +1,6 @@
-var GrayscaleFilter = VL.Model.extend({
+import { Model } from 'framework';
+
+const GrayscaleFilter = Model.extend({
   defaults: {
     'name':      'grayscale',
     'type':      'filter',
@@ -24,3 +26,5 @@ var GrayscaleFilter = VL.Model.extend({
     return data;
   }
 });
+
+export default GrayscaleFilter;
