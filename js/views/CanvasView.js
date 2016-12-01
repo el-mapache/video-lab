@@ -3,6 +3,7 @@ function CanvasView(el, stream) {
   this.active = false;
 
   this.feedback = !!this.feedback;
+  this.isGlitch = !!this.isGlitch;
   this.canvas = el;
   this.canvasContext = this.canvas.getContext('2d');
   this.stream = stream;
@@ -21,6 +22,7 @@ CanvasView.prototype.initialize = function() {
   document.getElementById("snapshot").addEventListener("click", this.takePhoto.bind(this));
   document.getElementById("feedback").addEventListener("click", this.toggleFeedback.bind(this));
   document.getElementById("canvasBlur").addEventListener("input", this.blur.bind(this));
+  document.getElementById('glitch').addEventListener('click', this.toggleGlitch.bind(this));
 
   this.backingVideo.addEventListener('loadeddata', function() {
     this.backingVideo.play();
@@ -84,11 +86,14 @@ CanvasView.prototype.draw = function(imageData) {
     return false;
   }
 
-  if (imageData instanceof Image) {
-    this.canvasContext.drawImage(imageData, 0, 0);
-  } else {
+  var self = this;
 
-    this.canvasContext.putImageData(imageData, 0, 0);
+  this.canvasContext.putImageData(imageData, 0, 0);
+
+  if (this.isGlitch) {
+    GlitchService.glitch(this.getDataURL(), function(img) {
+      self.canvasContext.drawImage(img, 0, 0);
+    });
   }
 
   return true;
@@ -106,6 +111,10 @@ CanvasView.prototype.takePhoto = function(evt) {
   anchor.download = "image"+ +new Date() + ".png";
 
   anchor.dispatchEvent(new MouseEvent('click'));
+};
+
+CanvasView.prototype.toggleGlitch = function() {
+  this.isGlitch = !this.isGlitch;
 };
 
 CanvasView.prototype.constructor = CanvasView;

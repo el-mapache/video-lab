@@ -79,17 +79,21 @@
     this.init.apply(this, arguments);
   };
 
-  Utils.extend(Collection.prototype, {
+  Collection.prototype = Object.assign({}, Collection.prototype, {
     init: function() {},
 
     add: function(models) {
+      var self = this;
+
       if (!models) {
         return this;
       }
 
       models = models instanceof Array ? models : [models];
 
-      Utils.forEach(models, this._addModel.bind(this));
+      models.forEach(function(model, index) {
+        self._addModel(model, index, models);
+      });
 
       return this;
     },
@@ -145,7 +149,7 @@
     },
 
     each: function(callback) {
-      Utils.forEach(this.models, function(model) {
+      this.models.forEach(function(model) {
         callback(model);
       });
     },
@@ -189,7 +193,7 @@
     this.init.apply(this, arguments);
   };
 
-  Utils.extend(Model.prototype, {
+  Model.prototype = Object.assign({}, Model.prototype, {
     init: function(options) {},
 
     set: function(prop, value) {
@@ -238,18 +242,18 @@
     },
 
     _buildAttributes: function() {
-      var defaults = Utils.extend({}, this.defaults);
+      var defaults = Object.assign({}, this.defaults);
 
       if (!defaults || typeof defaults !== 'object') {
         return;
       }
 
-      Utils.extend(this.attributes, defaults);
+      this.attributes = Object.assign({}, this.attributes, defaults);
     },
 
     // Return a copy of the model's attributes as a javascript object
     data: function() {
-      return Utils.extend({}, this.attributes);
+      return Object.assign({}, this.attributes);
     }
   });
 
@@ -269,7 +273,7 @@
     this.init.apply(this, arguments);
   };
 
-  Utils.extend(View.prototype, {
+  View.prototype = Object.assign({}, View.prototype, {
     render: function() {
       return this;
     },

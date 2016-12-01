@@ -27,7 +27,8 @@
     <button class="convolver {{=it.active}}" value='{{=it.name}}'>{{=it.name}}</button></br>
   </script>
 
-  <script src='js/lib/LinkedList.js'></script>
+
+  <script src='js/glitch-service.js'></script>
   <script src='js/dot.js'></script>
   <script src="js/util.js"></script>
   <script src="js/services.js"></script>
@@ -81,7 +82,7 @@
     <button id="stop">Stop</button>
     <button id="feedback">Feedback</button>
     <button id="reset">Reset</button>
-
+    <button id="glitch">JPEG Glitch<button>
     <button id='loop'>Store last second of video</button>
 
     <div class='filters'>
@@ -226,10 +227,7 @@
       var self = this;
 
       function animationCallback() {
-        glitch(self.canvasView.getDataURL(), self.canvasView.draw.bind(self.canvasView));
         var transformedData = self.filtersView.process(self.canvasView.getPixels());
-
-
         var shouldKeepDrawing = self.canvasView.draw(transformedData);
 
          if (!shouldKeepDrawing) {
