@@ -1,5 +1,7 @@
+import fixedFilterTemplate from 'templates/fixed-filter.html';
+
 var FixedFilterView = VL.View.extend({
-  template: document.getElementById('fixed-filter').innerHTML,
+  template: fixedFilterTemplate,
   events: {
     '.filter click': 'toggleFilter'
   },
@@ -13,3 +15,5 @@ var FixedFilterView = VL.View.extend({
     this.model.set('active', event.target.checked);
   }
 });
+
+export default FixedFilterView;

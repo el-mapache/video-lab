@@ -1,0 +1,5 @@
+<form oninput="level.value = {{=it.name}}.valueAsNumber;">
+  <input class="filter" type="checkbox" name="filter"/>{{=it.name}}
+  <input type="range" min="{{=it.min}}" max="{{=it.max}}" id="{{=it.name}}-filter" name="{{=it.name}}" value="{{=it.currentValue}}" step="{{=it.step}}" class="variable-filter"/>
+  <output style="margin-left: 20px; padding:14px;" for="{{=it.name}}-filter" name="level">{{=it.currentValue}}</output>
+</form>
