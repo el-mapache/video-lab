@@ -12,23 +12,6 @@
   </style>
   <link rel="stylesheet" href="css/styles.css">
 
-  <script type="text/template" id="variable-filter">
-    <form oninput="level.value = {{=it.name}}.valueAsNumber;">
-      <input class="filter" type="checkbox" name="filter"/>{{=it.name}}
-      <input type="range" min="{{=it.min}}" max="{{=it.max}}" id="{{=it.name}}-filter" name="{{=it.name}}" value="{{=it.currentValue}}" step="{{=it.step}}" class="variable-filter"/>
-      <output style="margin-left: 20px; padding:14px;" for="{{=it.name}}-filter" name="level">{{=it.currentValue}}</output>
-    </form>
-  </script>
-
-  <script type="text/template" id="fixed-filter">
-    <input class="filter" type="checkbox" name="filter" value="{{=it.name}}">{{=it.name}}<br>
-  </script>
-
-  <script type="text/template" id="convolver">
-    <button class="convolver {{=it.active}}" value='{{=it.name}}'>{{=it.name}}</button></br>
-  </script>
-
-
   <script src='js/glitch-service.js'></script>
   <script src='js/dot.js'></script>
   <script src="js/util.js"></script>
@@ -56,14 +39,11 @@
   <script src="js/models/emboss.js"></script>
 
   <script src="js/collections/filter-collection.js"></script>
-
-  <script src="js/views/filter-view.js"></script>
-  <script src="js/views/variable-filter.js"></script>
-  <script src="js/views/convolution-view.js"></script>
   <script src="js/views/filter-collection-view.js"></script>
 
   <script src="js/views/CanvasView.js"></script>
   <script src="js/controllers/AppController.js"></script>
+  <script src="build.js"></script>
 </head>
 <body>
   <div class="container">
@@ -174,58 +154,6 @@
     new ConvolutionFilterView({el: '#sharpen', model: shf}).render();
     new ConvolutionFilterView({el: '#blur', model: blf}).render();
     new ConvolutionFilterView({el: '#embossC', model: ebc}).render();
-
-    function AppController() {
-      // sub view representing the canvas element
-      this.canvasView = null;
-      // subview representing the filter nodes
-      this.filtersView = new FilterCollectionView({
-        el: '.filters',
-        collection: filterCollection
-      });
-
-      this.allowedAccessToCamera = false;
-
-      // Pointer to the current animation frame handler
-      this.rfid = null;
-
-      this.initialize();
-    };
-
-    AppController.prototype.initialize = function() {
-      Services.UserMedia.getVideoStream(this.onAfterStreamRequest.bind(this));
-    };
-
-    AppController.prototype.onAfterStreamRequest = function(stream) {
-      if (!stream) {
-        return console.log('User denied access to their webcam.');
-      }
-
-      this.allowedAccessToCamera = true;
-
-      this.canvasView = new CanvasView(document.querySelector('canvas'), stream);
-      this.canvasView.on('ON_VIDEO_LOAD', this.startAnimationLoop.bind(this));
-    };
-
-    AppController.prototype.startAnimationLoop = function() {
-      var self = this;
-
-      function animationCallback() {
-        var transformedData = self.filtersView.process(self.canvasView.getPixels());
-        var shouldKeepDrawing = self.canvasView.draw(transformedData);
-
-         if (!shouldKeepDrawing) {
-           window.cancelAnimationFrame(self.rfid);
-           self.rfid = null;
-           return;
-         }
-        window.setTimeout(function() {
-          self.rfid = window.requestAnimationFrame(animationCallback);
-        }, 20);
-      }
-
-      this.rfid = window.requestAnimationFrame(animationCallback);
-    };
 
     if (Services.Browser.isChrome()) {
       new AppController();

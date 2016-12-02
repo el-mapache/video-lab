@@ -1,6 +1,7 @@
+import variableFilterTemplate from 'templates/variable-filter.html';
+
 var VariableFilterView = VL.View.extend({
-  //constructor: VL.View,
-  template: document.getElementById('variable-filter').innerHTML,
+  template: variableFilterTemplate,
 
   events: {
     '.filter click': 'toggleFilter',
@@ -34,3 +35,5 @@ var VariableFilterView = VL.View.extend({
     this.model.set('currentValue', +event.target.value);
   }
 });
+
+export default VariableFilterView;

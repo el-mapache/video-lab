@@ -1,5 +1,7 @@
-var ConvolutionFilterView = VL.View.extend({
-  template: document.getElementById('convolver').innerHTML,
+import convolutionTemplate from 'templates/convolution-filter.html';
+
+var ConvolverFilterView = VL.View.extend({
+  template: convolutionTemplate,
 
   events: {
     '.convolver click': 'toggleFilter'
@@ -16,3 +18,4 @@ var ConvolutionFilterView = VL.View.extend({
   }
 });
 
+export default ConvolverFilterView;
