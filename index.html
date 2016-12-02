@@ -10,6 +10,7 @@
       background: transparent;
     }
   </style>
+  <link rel="stylesheet" href="css/styles.css">
 
   <script type="text/template" id="variable-filter">
     <form oninput="level.value = {{=it.name}}.valueAsNumber;">
@@ -27,7 +28,8 @@
     <button class="convolver {{=it.active}}" value='{{=it.name}}'>{{=it.name}}</button></br>
   </script>
 
-  <script src='js/lib/LinkedList.js'></script>
+
+  <script src='js/glitch-service.js'></script>
   <script src='js/dot.js'></script>
   <script src="js/util.js"></script>
   <script src="js/services.js"></script>
@@ -64,68 +66,69 @@
   <script src="js/controllers/AppController.js"></script>
 </head>
 <body>
-  <video id="camera-input"></video>
-  <canvas width="480" height="360"></canvas>
-  <br>
-  <div style='float:right; margin-right:200px;'>
-    <div id='cc'></div>
-  </div>
-  <div>
-    <button id="snapshot">Take a Photo</button>
-    <form name='canvas-blur' oninput="level.value = canvasBlur.valueAsNumber;">
-      <label for="canvasBlur">Blur</label>
-      <input type="range" min="0.0" max="1.0" step="0.1" id="canvasBlur" name="canvasBlur" value="1.0"/>
-      <output for="canvasBlur" name="level">1.0</output>
-    </form>
-
-    <button id="stop">Stop</button>
-    <button id="feedback">Feedback</button>
-    <button id="reset">Reset</button>
-
-    <button id='loop'>Store last second of video</button>
-
-    <div class='filters'>
-      <br><br>
-      <div style="float: left; margin-left: 20px; margin-right: 20px;">
-        <h4>Fixed Filters</h4>
-        <div id='grayscale'></div>
-        <div id='invert'></div>
-        <div id='sepia'></div>
-        <div id='emboss'></div>
-        <div id='low-res'></div>
-        <div id='bayer'></div>
-        <div id='xor'></div>
-        <div id='and'></div>
-      </div>
-
-      <div style="float: left; margin-left: 20px; margin-right: 20px;">
-        <h4>Variable Filters</h4>
-
-        <div id='contrast'></div>
-        <div id='brightness'></div>
-        <div id='saturation'></div>
-        <div id='threshold'></div>
-        <div id='median'></div>
-      </div>
-
-      <div style="float: left; margin-left: 20px; margin-right: 20px;">
-        <h4>Convolvers</h4>
-
-        <div id='sobel'></div>
-        <div id='laplace'></div>
-        <div id='sharpen'></div>
-        <div id='blur'></div>
-        <div id='embossC'></div>
-      </div>
+  <div class="container">
+    <video id="camera-input"></video>
+    <canvas width="640" height="480"></canvas>
+    <br>
+    <div style='float:right; margin-right:200px;'>
+      <div id='cc'></div>
     </div>
+    <div>
+      <button id="snapshot">Take a Photo</button>
+      <form name='canvas-blur' oninput="level.value = canvasBlur.valueAsNumber;">
+        <label for="canvasBlur">Blur</label>
+        <input type="range" min="0.0" max="1.0" step="0.1" id="canvasBlur" name="canvasBlur" value="1.0"/>
+        <output for="canvasBlur" name="level">1.0</output>
+      </form>
 
-    <div id="image-data">
-      <img src='' id="image-preview" height="150" width="150"/>
-      <input type="file" id="file-upload" accept="image/gif, image/jpeg, image/png"/>
+      <button id="stop">Stop</button>
+      <button id="feedback">Feedback</button>
+      <button id="reset">Reset</button>
+      <button id="glitch">JPEG Glitch</button>
+      <button id='loop'>Store last second of video</button>
+
+      <div class='filters'>
+        <br><br>
+        <div style="float: left; margin-left: 20px; margin-right: 20px;">
+          <h4>Fixed Filters</h4>
+          <div id='grayscale'></div>
+          <div id='invert'></div>
+          <div id='sepia'></div>
+          <div id='emboss'></div>
+          <div id='low-res'></div>
+          <div id='bayer'></div>
+          <div id='xor'></div>
+          <div id='and'></div>
+        </div>
+
+        <div style="float: left; margin-left: 20px; margin-right: 20px;">
+          <h4>Variable Filters</h4>
+
+          <div id='contrast'></div>
+          <div id='brightness'></div>
+          <div id='saturation'></div>
+          <div id='threshold'></div>
+          <div id='median'></div>
+        </div>
+
+        <div style="float: left; margin-left: 20px; margin-right: 20px;">
+          <h4>Convolvers</h4>
+
+          <div id='sobel'></div>
+          <div id='laplace'></div>
+          <div id='sharpen'></div>
+          <div id='blur'></div>
+          <div id='embossC'></div>
+        </div>
+      </div>
+
+      <div id="image-data">
+        <img src='' id="image-preview" height="150" width="150"/>
+        <input type="file" id="file-upload" accept="image/gif, image/jpeg, image/png"/>
+      </div>
+
     </div>
-
   </div>
-
   <script>
     var gsf = new GrayscaleFilter();
     var bf = new BrightnessFilter();
@@ -172,24 +175,6 @@
     new ConvolutionFilterView({el: '#blur', model: blf}).render();
     new ConvolutionFilterView({el: '#embossC', model: ebc}).render();
 
-    var hdConstraints = {
-      video: {
-        mandatory: {
-          minWidth: 1280,
-          minHeight: 720
-        }
-      }
-    };
-
-    var sdConstraints = {
-      video: {
-        mandatory: {
-          minWidth: 480,
-          minHeight: 360
-        }
-      }
-    };
-
     function AppController() {
       // sub view representing the canvas element
       this.canvasView = null;
@@ -226,10 +211,7 @@
       var self = this;
 
       function animationCallback() {
-        glitch(self.canvasView.getDataURL(), self.canvasView.draw.bind(self.canvasView));
         var transformedData = self.filtersView.process(self.canvasView.getPixels());
-
-
         var shouldKeepDrawing = self.canvasView.draw(transformedData);
 
          if (!shouldKeepDrawing) {
@@ -237,67 +219,13 @@
            self.rfid = null;
            return;
          }
-         window.setTimeout(function() {
+        window.setTimeout(function() {
           self.rfid = window.requestAnimationFrame(animationCallback);
-        }, 500);
+        }, 20);
       }
 
       this.rfid = window.requestAnimationFrame(animationCallback);
     };
-
-    // stolen from errorzero
-    function glitch(dataUrl, callback) {
-      // These are the characters that will be randomly replaced in the image
-      var charSets = [
-        ["0",")","<",">",".","*","&","£","%","~","#","+","a","!","|","-"],
-			  ["a","b","c","d","e","f","z","x","v","n","m","o","i","y","q","w"]
-      ];
-      var chunkSizes = ["64", "128", "256", "1024", "1024"];
-      var chunks = [];
-
-      var glitchChars = charSets[(Math.random() * 1 + 1) | 0];
-      var chunkSize = chunkSizes[(Math.random() * 5 + 1) | 0];
-
-      var decodedData = atob(dataUrl.replace('data:image/jpeg;base64,', ''));
-      var chunk = parseInt((decodedData.length - 1) / chunkSize);
-      var chunks = [];
-      for (var i = 0, charsLength = decodedData.length; i < charsLength; i += chunk) {
-        chunks.push(decodedData.substring(i, i + chunk));
-      }
-
-      //Loop through chunks, leaving out the header chunk
-      for(var i=2;i<=chunkSize;i++) {
-
-        //Create random number for the glitch decision
-        var glitchRand =(Math.random()*100 + 1) | 0;
-
-        //create random numbers for selection of the glitch characters
-        var char1Rand = (Math.random()*glitchChars.length) | 0;
-        var char2Rand = (Math.random()*glitchChars.length) | 0;
-
-        if (char2Rand === char1Rand) {
-          char2Rand = "9";
-        }
-
-        //If random number is odd
-        if(glitchRand % 2) {
-          //glitch the chunk
-          chunks[i] = chunks[i].replace(glitchChars[char1Rand],glitchChars[char2Rand]);
-        }
-
-      } //End chunk loop
-
-      //Base64 encode the glitched data
-      var base64data = btoa(chunks.join(''));
-
-      //Put the glitched image into the glitched canvas
-      glitched_img = new Image();
-      glitched_img.src = 'data:image/jpeg;base64,' + base64data;
-      return glitched_img.onload = function() {
-        return callback(this);
-      };
-    }
-
 
     if (Services.Browser.isChrome()) {
       new AppController();

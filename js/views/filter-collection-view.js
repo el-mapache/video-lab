@@ -8,12 +8,16 @@ var FilterCollectionView = VL.View.extend({
     if (newVal) {
       this.addFilter(model);
     } else {
-      this.activeFilters.remove(model);
+      this.removeFilter(model);
     }
   },
 
   addFilter: function(filter) {
     this.activeFilters.add(filter);
+  },
+
+  removeFilter: function(filter) {
+    this.activeFilters.remove(filter);
   },
 
   process: function(imageData, zones) {

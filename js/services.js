@@ -10,12 +10,8 @@ var Services = {
     // their audio/video hardware by the program.
     var hasRequestedAccess = false;
 
-    function getUserMedia(opts, onSuccess, onError) {
-      navigator.getUserMedia = navigator.mozGetUserMedia    ||
-                               navigator.webkitGetUserMedia ||
-                               navigator.getUserMedia;
-
-      navigator.getUserMedia(opts, onSuccess, onError);
+    function getUserMedia(constraints, onSuccess, onError) {
+      return navigator.mediaDevices.getUserMedia(constraints);
     }
 
     return {
@@ -25,22 +21,20 @@ var Services = {
         }
 
         getUserMedia({
+          audio: false,
           video: {
-            mandatory: {
-              maxWidth: 640,
-              maxHeight: 360
-            }
-          }},
-          function(stream) {
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 480, ideal: 720, max: 1080 },
+            frameRate: 24
+          }}).then(function(stream) {
             mediaStream = stream;
             hasRequestedAccess = true;
             return callback(stream);
-          }, function(err) {
+          }).catch(function(err) {
             console.log(err);
             hasRequestedAccess = true;
             return callback(null);
-          }
-        );
+          });
       }
     };
   }()),
