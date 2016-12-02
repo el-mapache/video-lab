@@ -1,12 +1,12 @@
 body, html, div, p, canvas, form, input,
-button, label, select, range {
+button, label, select {
   padding: 0;
   margin: 0;
 }
 
 html, body {
   width: 100%;
-  height: 100;
+  height: 100%;
 }
 
 canvas {
