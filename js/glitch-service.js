@@ -5,9 +5,30 @@ var CHAR_SETS = [
 ];
 
 var GLITCH_SIZES = ["64", "128", "256", "1024", "1024"];
+var glitchInterval = 50;
+var timeTillGlitch = 0;
+var hasGlitched = false;
+var interval = 1; // in ms
+var intervalId = 0;
+
+var tick = function() {
+  timeTillGlitch += interval;
+
+  if (timeTillGlitch === glitchInterval) {
+    hasGlitched = false;
+  }
+
+};
 
 var GlitchService = {
   glitch: function(dataUrl, callback) {
+    if (hasGlitched && timeTillGlitch !== glitchInterval) {
+      return;
+    }
+
+    clearInterval(intervalId);
+    timeTillGlitch = 0;
+
     var chunks = [];
 
     var glitchChars = CHAR_SETS[(Math.random() * 1 + 1) | 0];
@@ -51,6 +72,8 @@ var GlitchService = {
     glitched_img = new Image();
     glitched_img.src = 'data:image/jpeg;base64,' + base64data;
     return glitched_img.onload = function() {
+      hasGlitched = true;
+      intervalId = setInterval(tick, interval);
       return callback(this);
     };
   }
