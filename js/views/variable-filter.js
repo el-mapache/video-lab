@@ -1,3 +1,4 @@
+import VL from 'lib/framework';
 import variableFilterTemplate from 'templates/variable-filter.html';
 
 var VariableFilterView = VL.View.extend({

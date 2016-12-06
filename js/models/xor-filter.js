@@ -1,4 +1,6 @@
-var XORFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const XORFilter = VL.Model.extend({
 	defaults: {
    	'name':        'xor',
     'type':        'filter',
@@ -29,3 +31,5 @@ var XORFilter = VL.Model.extend({
     return data
 	}
 });
+
+export default XORFilter;

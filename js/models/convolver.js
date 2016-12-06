@@ -1,12 +1,15 @@
-var Convolver = VL.Model.extend({
+import VL from 'lib/framework';
+
+const Convolver = VL.Model.extend({
   constructor: VL.Model,
   /*
    * Generic convolving function.
    * @param{pixels} [object] Image data object pulled from the current canvas frame.
-   * @param{weights} [UInt8ClampedArray] An empty 
+   * @param{weights} [UInt8ClampedArray] An empty
    * @param{opacity} [number] Set opacity for a given pixel, between 0-255.
   */
-	convolve: function(pixels, weights, opacity) {
+	convolve: function(pixels, opacity) {
+    var weights = this.__matrix__;
     // This determines how many rows the kernal has
     var side = Math.round(Math.sqrt(weights.length));
     // offset based on kernal size
@@ -23,7 +26,7 @@ var Convolver = VL.Model.extend({
 
     var alphaFac = opacity ? 1 : 0;
     var y = 0;
-    
+
     // go through the destination image pixels
     while ((++y) < sh) {
       var x = 0;
@@ -67,7 +70,9 @@ var Convolver = VL.Model.extend({
         data[++dstOff] = 255;
       }
     }
-    
+
     return output;
   }
 });
+
+export default Convolver;

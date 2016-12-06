@@ -1,4 +1,6 @@
-var AndFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const AndFilter = VL.Model.extend({
 	defaults: {
    	'name':        'and',
     'type':        'filter',
@@ -17,7 +19,7 @@ var AndFilter = VL.Model.extend({
       r = data[ii];
       g = data[ii+1];
       b = data[ii+2];
-			
+
       data[ii] =   r & (data[ii / 2] || 255);
       data[ii+1] = g & (data[ii - 20000] || 255);
       data[ii+2] = b & (data[ii * 2] || 255);
@@ -26,3 +28,5 @@ var AndFilter = VL.Model.extend({
     return data
 	}
 });
+
+export default AndFilter;

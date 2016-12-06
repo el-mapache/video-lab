@@ -1,4 +1,6 @@
-var BrightnessFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const BrightnessFilter = VL.Model.extend({
   defaults: {
     'name':        'brightness',
     'type':        'filter',
@@ -47,3 +49,5 @@ var BrightnessFilter = VL.Model.extend({
     this._buildLookup(newVal);
   }
 });
+
+export default BrightnessFilter;

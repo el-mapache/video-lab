@@ -11,39 +11,6 @@
     }
   </style>
   <link rel="stylesheet" href="css/styles.css">
-
-  <script src='js/glitch-service.js'></script>
-  <script src='js/dot.js'></script>
-  <script src="js/util.js"></script>
-  <script src="js/services.js"></script>
-  <script src="js/framework.js"></script>
-
-  <script src="js/models/convolver.js"></script>
-  <script src="js/models/grayscale-filter.js"></script>
-  <script src="js/models/contrast-filter.js"></script>
-  <script src="js/models/brightness-filter.js"></script>
-  <script src="js/models/saturation-filter.js"></script>
-  <script src="js/models/inversion-filter.js"></script>
-  <script src="js/models/sepia-filter.js"></script>
-  <script src="js/models/emboss-filter.js"></script>
-  <script src="js/models/threshold-filter.js"></script>
-  <script src="js/models/bayer-filter.js"></script>
-  <script src="js/models/low-res.js"></script>
-  <script src="js/models/xor-filter.js"></script>
-  <script src="js/models/and-filter.js"></script>
-  <script src="js/models/median-filter.js"></script>
-  <script src="js/models/sobel-filter.js"></script>
-  <script src="js/models/laplace.js"></script>
-  <script src="js/models/sharpen.js"></script>
-  <script src="js/models/blur.js"></script>
-  <script src="js/models/emboss.js"></script>
-
-  <script src="js/collections/filter-collection.js"></script>
-  <script src="js/views/filter-collection-view.js"></script>
-
-  <script src="js/views/CanvasView.js"></script>
-  <script src="js/controllers/AppController.js"></script>
-  <script src="build.js"></script>
 </head>
 <body>
   <div class="container">
@@ -63,9 +30,8 @@
 
       <button id="stop">Stop</button>
       <button id="feedback">Feedback</button>
-      <button id="reset">Reset</button>
       <button id="glitch">JPEG Glitch</button>
-      <button id='loop'>Store last second of video</button>
+      <button id="reset">Reset</button>
 
       <div class='filters'>
         <br><br>
@@ -109,57 +75,7 @@
 
     </div>
   </div>
-  <script>
-    var gsf = new GrayscaleFilter();
-    var bf = new BrightnessFilter();
-    var cf = new ContrastFilter();
-    var sf = new SaturationFilter();
-    var ivf = new InversionFilter();
-    var spf = new SepiaFilter();
-    var ef = new EmbossFilter();
-    var tf = new ThresholdFilter();
-    var byf = new BayerFilter();
-    var lrf = new LowResFilter();
-    var xof = new XORFilter();
-    var and = new AndFilter();
-    var mdf = new MedianFilter();
-    var sbf = new SobelFilter();
-    var lpf = new LaplaceFilter();
-    var shf = new SharpenFilter();
-    var blf = new BlurFilter();
-    var ebc = new EmbossConvolver();
-
-    var filterCollection = new FilterCollection({
-      models: [gsf, cf, bf, sf, ivf, spf, ef, tf, byf, lrf, xof, mdf, sbf, lpf,shf,blf,ebc, and]
-    });
-
-    // Fixed Filters
-    new FixedFilterView({el: '#grayscale', model: gsf}).render();
-    new FixedFilterView({el: '#sepia', model: spf}).render();
-    new FixedFilterView({el: '#invert', model: ivf}).render();
-    new FixedFilterView({el: '#emboss', model: ef}).render();
-    new FixedFilterView({el: '#low-res', model: lrf}).render();
-    new FixedFilterView({el: '#bayer', model: byf}).render();
-    new FixedFilterView({el: '#xor', model: xof}).render();
-    new FixedFilterView({el: '#and', model: and}).render();
-
-    new VariableFilterView({el: '#saturation', model: sf}).render();
-    new VariableFilterView({el: '#contrast', model: cf}).render();
-    new VariableFilterView({el: '#brightness', model: bf}).render();
-    new VariableFilterView({el: '#threshold', model: tf}).render();
-    new VariableFilterView({el: '#median', model: mdf}).render();
-
-    new ConvolutionFilterView({el: '#sobel', model: sbf}).render();
-    new ConvolutionFilterView({el: '#laplace', model: lpf}).render();
-    new ConvolutionFilterView({el: '#sharpen', model: shf}).render();
-    new ConvolutionFilterView({el: '#blur', model: blf}).render();
-    new ConvolutionFilterView({el: '#embossC', model: ebc}).render();
-
-    if (Services.Browser.isChrome()) {
-      new AppController();
-    } else {
-      alert("This page only supports Google Chrome, version 29 or higher.");
-    }
-  </script>
+  <script src='js/dot.js'></script>
+  <script src="build.js"></script>
 </body>
 </html>

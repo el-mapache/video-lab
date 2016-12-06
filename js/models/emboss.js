@@ -1,4 +1,6 @@
-var EmbossConvolver = Convolver.extend({
+import Convolver from './convolver';
+
+const Emboss = Convolver.extend({
   defaults: {
     name: 'emboss',
     type: 'convolver',
@@ -6,3 +8,5 @@ var EmbossConvolver = Convolver.extend({
     active: false
   }
 });
+
+export default Emboss;

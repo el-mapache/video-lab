@@ -1,3 +1,4 @@
+import VL from 'lib/framework';
 import fixedFilterTemplate from 'templates/fixed-filter.html';
 
 var FixedFilterView = VL.View.extend({

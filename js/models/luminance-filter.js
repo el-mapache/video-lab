@@ -1,4 +1,6 @@
-var LuminanceFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const LuminanceFilter = VL.Model.extend({
   defaults: {
     'name':        'luminance',
     'type':        'filter',
@@ -28,7 +30,7 @@ var LuminanceFilter = VL.Model.extend({
 
       var ratio = this.get('currentValue') / this._sourceLuminance(r,g,b);
 
-      var rr = (r * ratio | 0); 
+      var rr = (r * ratio | 0);
       var gg = (g * ratio | 0);
       var bb = (b * ratio | 0);
 
@@ -40,3 +42,5 @@ var LuminanceFilter = VL.Model.extend({
     return data;
   }
 });
+
+export default LuminanceFilter;

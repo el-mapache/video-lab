@@ -1,4 +1,6 @@
-var SepiaFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const SepiaFilter = VL.Model.extend({
   defaults: {
     'name':        'sepia',
     'type':        'filter',
@@ -21,6 +23,8 @@ var SepiaFilter = VL.Model.extend({
       data[ii+2] = ((r * 0.272) + (g * 0.534) + (b * 0.131)) | 0;
     }
 
-    return data;
+    return imageData;
   }
 });
+
+export default SepiaFilter;
