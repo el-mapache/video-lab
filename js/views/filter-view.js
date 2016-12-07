@@ -1,5 +1,6 @@
 import VL from 'lib/framework';
 import fixedFilterTemplate from 'templates/fixed-filter.html';
+import doT from 'lib/dot';
 
 var FixedFilterView = VL.View.extend({
   template: fixedFilterTemplate,

@@ -28,7 +28,7 @@ const LuminanceFilter = VL.Model.extend({
           g = data[ii+1],
           b = data[ii+2];
 
-      var ratio = this.get('currentValue') / this._sourceLuminance(r,g,b);
+      var ratio = this.__currentValue__ / this._sourceLuminance(r,g,b);
 
       var rr = (r * ratio | 0);
       var gg = (g * ratio | 0);
@@ -39,7 +39,7 @@ const LuminanceFilter = VL.Model.extend({
       data[ii+2] = bb;
     }
 
-    return data;
+    return imageData;
   }
 });
 

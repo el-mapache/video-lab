@@ -25,7 +25,7 @@ const AndFilter = VL.Model.extend({
       data[ii+2] = b & (data[ii * 2] || 255);
     }
 
-    return data
+    return imageData;
 	}
 });
 

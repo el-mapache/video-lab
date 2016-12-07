@@ -63,7 +63,7 @@ const MedianFilter = VL.Model.extend({
         dstPixels[++dstOffset] = color >> 8 & 0xff;
       }
     }
-    return dstPixels;
+    return srcData;
   },
 
   _comparator: function(a, b) {

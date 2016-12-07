@@ -1,3 +1,7 @@
+html {
+
+}
+
 body, html, div, p, canvas, form, input,
 button, label, select {
   padding: 0;
@@ -10,9 +14,14 @@ html, body {
 }
 
 canvas {
+  background: transparent;
   display: block;
   margin-left: auto;
   margin-right: auto;
+}
+
+video {
+  display: none;
 }
 
 .container {

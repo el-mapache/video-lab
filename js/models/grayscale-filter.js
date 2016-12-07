@@ -23,7 +23,7 @@ const GrayscaleFilter = VL.Model.extend({
       data[i] = data[i+1] = data[i+2] = (0.21 * r + 0.72 * g + 0.07 * b);
     }
 
-    return data;
+    return imageData;
   }
 });
 

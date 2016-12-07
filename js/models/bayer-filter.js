@@ -34,7 +34,7 @@ const BayerFilter = VL.Model.extend({
       data[i] = data[i + 1] = data[i + 2] = pixVal >= this.MATRIX[(y%3)*3+(x%3)] ? 255 : 0;
     }
 
-    return data;
+    return imageData;
   }
 });
 

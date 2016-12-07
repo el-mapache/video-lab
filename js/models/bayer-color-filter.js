@@ -18,7 +18,7 @@ const BayerColorFilter = VL.Model.extend({
     name: 'bayer color',
     type: 'filter',
     active: false,
-    potential: 'fixed
+    potential: 'fixed'
   },
 
   filter: function(imageData) {
@@ -37,7 +37,7 @@ const BayerColorFilter = VL.Model.extend({
       data[i+2] = newcolor[2];
     }
 
-    return data;
+    return imageData;
   }
 });
 

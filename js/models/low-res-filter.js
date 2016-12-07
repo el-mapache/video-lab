@@ -78,7 +78,7 @@ const LowResFilter = VL.Model.extend({
       data[ii+2] = clamped[2];
     }
 
-    return data;
+    return imageData;
   },
 });
 

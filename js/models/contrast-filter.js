@@ -32,7 +32,7 @@ const ContrastFilter = VL.Model.extend({
       data[ii+2] = this.lookup[data[ii+2]];
     }
 
-    return data;
+    return imageData;
   },
 
   _buildLookup: function(value) {

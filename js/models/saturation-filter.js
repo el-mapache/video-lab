@@ -36,7 +36,7 @@ const SaturationFilter = VL.Model.extend({
       data[i+2] = p + (b-p) * change;
     }
 
-    return data;
+    return imageData;
   }
 });
 

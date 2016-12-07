@@ -1,5 +1,6 @@
 import VL from 'lib/framework';
 import variableFilterTemplate from 'templates/variable-filter.html';
+import doT from 'lib/dot';
 
 var VariableFilterView = VL.View.extend({
   template: variableFilterTemplate,
