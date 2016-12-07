@@ -1,4 +1,6 @@
+import VL from 'lib/framework';
 import convolutionTemplate from 'templates/convolution-filter.html';
+import doT from 'lib/dot';
 
 var ConvolverFilterView = VL.View.extend({
   template: convolutionTemplate,

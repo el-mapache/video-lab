@@ -1,4 +1,6 @@
-var BayerColorFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const BayerColorFilter = VL.Model.extend({
   BAYER_COLOR: {
     0: [0,0,0],
     1: [255,0,0],
@@ -16,7 +18,7 @@ var BayerColorFilter = VL.Model.extend({
     name: 'bayer color',
     type: 'filter',
     active: false,
-    potential: 'fixed
+    potential: 'fixed'
   },
 
   filter: function(imageData) {
@@ -35,6 +37,8 @@ var BayerColorFilter = VL.Model.extend({
       data[i+2] = newcolor[2];
     }
 
-    return data;
+    return imageData;
   }
 });
+
+export default BayerColor;

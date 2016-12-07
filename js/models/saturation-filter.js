@@ -1,4 +1,6 @@
-var SaturationFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const SaturationFilter = VL.Model.extend({
   defaults: {
     'name':        'saturation',
     'type':        'filter',
@@ -34,6 +36,8 @@ var SaturationFilter = VL.Model.extend({
       data[i+2] = p + (b-p) * change;
     }
 
-    return data;
+    return imageData;
   }
 });
+
+export default SaturationFilter;

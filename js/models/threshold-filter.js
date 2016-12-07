@@ -1,4 +1,6 @@
-var ThresholdFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const ThresholdFilter = VL.Model.extend({
   defaults: {
     'name':        'threshold',
     'type':        'filter',
@@ -24,15 +26,17 @@ var ThresholdFilter = VL.Model.extend({
       g = data[ii+1];
       b = data[ii+2];
 
-      var gray = ((3*r+4*g+b) >>> 3);
+      var gray = ((3*r+4*g+b) >> 3);
 
       if (threshold < 0) {
-        data[ii] = data[ii+1] = data[ii+2] = gray >= (~threshold+1) ? 0 : 255;  
+        data[ii] = data[ii+1] = data[ii+2] = gray >= (~threshold+1) ? 0 : 255;
       } else {
         data[ii] = data[ii+1] = data[ii+2] = gray >= threshold ? 255 : 0;
       }
     }
 
-    return data;
+    return imageData;
   }
 });
+
+export default ThresholdFilter;

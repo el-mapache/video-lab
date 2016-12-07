@@ -1,4 +1,6 @@
-var LaplaceFilter = Convolver.extend({
+import Convolver from './convolver';
+
+const Laplace = Convolver.extend({
   defaults: {
     name: 'laplace',
     type: 'convolver',
@@ -6,3 +8,5 @@ var LaplaceFilter = Convolver.extend({
     active: false
   }
 });
+
+export default Laplace;

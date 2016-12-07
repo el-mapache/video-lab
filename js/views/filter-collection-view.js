@@ -1,3 +1,6 @@
+import VL from 'lib/framework';
+import FilterCollection from 'collections/filter-collection';
+
 var FilterCollectionView = VL.View.extend({
   init: function(options) {
     this.activeFilters = new FilterCollection();
@@ -20,17 +23,29 @@ var FilterCollectionView = VL.View.extend({
     this.activeFilters.remove(filter);
   },
 
-  process: function(imageData, zones) {
+  process: function(imageData, done) {
+//     var filterFns = this.activeFilters.map(function(filter) {
+//       var type = filter.get('type');
+//       if (type === 'convolver') {
+//         return filter.convolve;
+//       } else {
+//         return filter.filter;
+//       }
+//     });
+//
+//     worker.onMessage = function(event) {
+//       console.log('all done!', event)
+// //      done(event.data.result);
+//     };
+//
+//     worker.postMessage({data: imageData, filters: filterFns});
     this.activeFilters.each(function(filter) {
       var type = filter.get('type');
-
-      if (type === 'convolver') {
-        imageData = filter.convolve(imageData, filter.get('matrix'));
-      } else {
-        imageData.data = filter.filter(imageData, zones);
-      }
+      imageData = filter[type === 'convolver' ? 'convolve' : 'filter'](imageData);
     });
 
     return imageData;
   }
 });
+
+export default FilterCollectionView;

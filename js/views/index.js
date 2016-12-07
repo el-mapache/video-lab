@@ -1,7 +1,13 @@
 import FixedFilterView from './filter-view';
 import VariableFilterView from './variable-filter';
-import ConvolverView from './convolution-view';
+import ConvolutionFilterView from './convolution-view';
+import CanvasView from './canvas-view';
+import FilterCollectionView from './filter-collection-view';
 
-window.FixedFilterView = FixedFilterView;
-window.VariableFilterView = VariableFilterView;
-window.ConvolutionFilterView = ConvolverView;
+export {
+  FixedFilterView,
+  VariableFilterView,
+  ConvolutionFilterView,
+  CanvasView,
+  FilterCollectionView
+};

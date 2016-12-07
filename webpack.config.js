@@ -6,7 +6,7 @@ module.exports = {
   target: 'node',
   entry: [
     'babel-polyfill',
-    'views/index.js'
+    './index.js'
   ],
   output: {
     path: __dirname,

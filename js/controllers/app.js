@@ -1,4 +1,8 @@
-function AppController() {
+import FilterCollectionView from 'views/filter-collection-view';
+import CanvasView from 'views/canvas-view';
+import RequestUserMedia from 'services/user-media';
+
+function AppController(filterCollection) {
   // sub view representing the canvas element
   this.canvasView = null;
   // subview representing the filter nodes
@@ -17,7 +21,7 @@ function AppController() {
 
 AppController.prototype = Object.assign({}, AppController.prototype, {
   initialize: function() {
-    Services.UserMedia.getVideoStream(this.onAfterStreamRequest.bind(this));
+    RequestUserMedia.getVideoStream(this.onAfterStreamRequest.bind(this));
   },
 
   onAfterStreamRequest: function(stream) {
@@ -49,3 +53,5 @@ AppController.prototype = Object.assign({}, AppController.prototype, {
     }())
   }
 });
+
+export default AppController;

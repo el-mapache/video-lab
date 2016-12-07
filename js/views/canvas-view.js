@@ -1,3 +1,6 @@
+import VL from 'lib/framework';
+import GlitchService from 'services/glitch';
+
 function CanvasView(el, stream) {
   // Whether or not the view screen is receiving data.
   this.active = false;
@@ -118,3 +121,6 @@ CanvasView.prototype.toggleGlitch = function() {
 };
 
 CanvasView.prototype.constructor = CanvasView;
+
+
+export default CanvasView;

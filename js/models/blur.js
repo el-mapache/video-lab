@@ -1,4 +1,6 @@
-var BlurFilter = Convolver.extend({
+import Convolver from './convolver';
+
+const Blur = Convolver.extend({
   defaults: {
     name: 'blur',
     type: 'convolver',
@@ -6,3 +8,5 @@ var BlurFilter = Convolver.extend({
     active: false
   }
 });
+
+export default Blur;

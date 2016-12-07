@@ -1,4 +1,6 @@
-var LowResFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const LowResFilter = VL.Model.extend({
   RGB: [
     [0,0,0],
     [0,0,170],
@@ -76,6 +78,8 @@ var LowResFilter = VL.Model.extend({
       data[ii+2] = clamped[2];
     }
 
-    return data;
+    return imageData;
   },
 });
+
+export default LowResFilter;

@@ -1,22 +1,27 @@
 {
   "name": "video-lab",
-  "version": "0.0.2",
-  "description": "",
+  "version": "1.0.0",
+  "description": "processing",
   "main": "index.js",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "watch": "webpack --progress --colors --watch",
+    "run": "python -m SimpleHTTPServer 9999"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/el-mapache/video-lab.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "adambiagianti",
   "license": "ISC",
   "devDependencies": {
+    "babel-core": "^6.18.2",
+    "babel-loader": "^6.2.8",
     "babel-polyfill": "^6.16.0",
     "babel-preset-latest": "^6.16.0",
     "html-loader": "^0.4.4",
+    "webpack": "^1.13.3",
     "webpack-node-externals": "^1.5.4"
   }
 }

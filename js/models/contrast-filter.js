@@ -1,4 +1,6 @@
-var ContrastFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const ContrastFilter = VL.Model.extend({
   defaults: {
     'name':        'contrast',
     'type':        'filter',
@@ -20,7 +22,7 @@ var ContrastFilter = VL.Model.extend({
   filter: function(imageData) {
     var data = imageData.data;
     var length = data.length;
-    
+
     var r,g,b;
     var ii = 0;
 
@@ -30,7 +32,7 @@ var ContrastFilter = VL.Model.extend({
       data[ii+2] = this.lookup[data[ii+2]];
     }
 
-    return data;
+    return imageData;
   },
 
   _buildLookup: function(value) {
@@ -55,7 +57,7 @@ var ContrastFilter = VL.Model.extend({
         output = 255;
       }
 
-      this.lookup[ii] = output | 0;  
+      this.lookup[ii] = output | 0;
     }
   },
 
@@ -63,3 +65,5 @@ var ContrastFilter = VL.Model.extend({
     this._buildLookup(newVal);
   }
 });
+
+export default ContrastFilter;

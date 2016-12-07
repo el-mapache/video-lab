@@ -1,4 +1,6 @@
-var SharpenFilter = Convolver.extend({
+import Convolver from './convolver';
+
+const Sharpen = Convolver.extend({
   defaults: {
     name: 'sharpen',
     type: 'convolver',
@@ -6,3 +8,5 @@ var SharpenFilter = Convolver.extend({
     active: false
   }
 });
+
+export default Sharpen;

@@ -1,4 +1,6 @@
-var XORFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const XORFilter = VL.Model.extend({
 	defaults: {
    	'name':        'xor',
     'type':        'filter',
@@ -26,6 +28,8 @@ var XORFilter = VL.Model.extend({
       data[ii+2] = b ^ (data[ii * 2] || 255);
     }
 
-    return data
+    return imageData;
 	}
 });
+
+export default XORFilter;

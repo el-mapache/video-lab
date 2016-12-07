@@ -1,4 +1,6 @@
-var MedianFilter = VL.Model.extend({
+import VL from 'lib/framework';
+
+const MedianFilter = VL.Model.extend({
   defaults: {
     'name':        'median',
     'type':        'filter',
@@ -18,7 +20,7 @@ var MedianFilter = VL.Model.extend({
         filterSize = this.get('currentValue'),
         edge = filterSize,
         halfEdge = (edge >> 1) | 0;
-    
+
     // We need to loop through every pixel of the source image
     for (var x = 3; x < w; ++x) {
       for (var y = 0; y < h; ++y) {
@@ -61,10 +63,12 @@ var MedianFilter = VL.Model.extend({
         dstPixels[++dstOffset] = color >> 8 & 0xff;
       }
     }
-    return dstPixels;
+    return srcData;
   },
 
   _comparator: function(a, b) {
     return a - b;
   }
-})
+});
+
+export default MedianFilter;
