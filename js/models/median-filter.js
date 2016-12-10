@@ -8,16 +8,17 @@ const MedianFilter = VL.Model.extend({
     'potential':    'variable',
     'min':          3,
     'max':          15,
-    'step':         4,
+    'step':         2,
     'currentValue': 7
   },
 
   filter: function(srcData) {
+    var pixels;
     var h = srcData.height,
         w = srcData.width,
         dstPixels = pixels = srcData.data,
         neighbors = [],
-        filterSize = this.get('currentValue'),
+        filterSize = this.__currentValue__,
         edge = filterSize,
         halfEdge = (edge >> 1) | 0;
 
@@ -56,7 +57,7 @@ const MedianFilter = VL.Model.extend({
           }
         }
 
-        var color = neighbors.sort(this._comparator)[((neighbors.length - 1)  >> 1) | 0];
+        var color = neighbors.sort(this._comparator)[((neighbors.length - 1) >> 1) | 0];
 
         dstPixels[dstOffset] = color >> 24 & 0xff;
         dstPixels[++dstOffset] = color >> 16 & 0xff;

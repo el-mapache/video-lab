@@ -27,6 +27,7 @@ CanvasView.prototype.initialize = function() {
   document.getElementById("canvasBlur").addEventListener("input", this.blur.bind(this));
   document.getElementById('glitch').addEventListener('click', this.toggleGlitch.bind(this));
 
+
   this.backingVideo.addEventListener('loadeddata', function() {
     this.backingVideo.play();
     this.trigger('ON_VIDEO_LOAD');
@@ -115,6 +116,7 @@ CanvasView.prototype.takePhoto = function(evt) {
 
   anchor.dispatchEvent(new MouseEvent('click'));
 };
+
 
 CanvasView.prototype.toggleGlitch = function() {
   this.isGlitch = !this.isGlitch;

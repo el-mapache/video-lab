@@ -24,6 +24,19 @@ video {
   display: none;
 }
 
+button {
+  background: transparent;
+  border: 1px solid #111;
+  border-radius: 2px 2px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+button:hover {
+  background: rgba(87,100,255,0.5);
+  border: 1px solid #555;
+}
+
 .container {
   margin: 0 auto;
   width: 1280px;
