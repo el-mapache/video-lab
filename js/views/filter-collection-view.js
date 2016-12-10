@@ -24,24 +24,9 @@ var FilterCollectionView = VL.View.extend({
   },
 
   process: function(imageData, done) {
-//     var filterFns = this.activeFilters.map(function(filter) {
-//       var type = filter.get('type');
-//       if (type === 'convolver') {
-//         return filter.convolve;
-//       } else {
-//         return filter.filter;
-//       }
-//     });
-//
-//     worker.onMessage = function(event) {
-//       console.log('all done!', event)
-// //      done(event.data.result);
-//     };
-//
-//     worker.postMessage({data: imageData, filters: filterFns});
     this.activeFilters.each(function(filter) {
-      var type = filter.get('type');
-      imageData = filter[type === 'convolver' ? 'convolve' : 'filter'](imageData);
+     var type = filter.get('type');
+     imageData = filter[type === 'convolver' ? 'convolve' : 'filter'](imageData);
     });
 
     return imageData;

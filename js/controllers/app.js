@@ -39,6 +39,7 @@ AppController.prototype = Object.assign({}, AppController.prototype, {
     var self = this;
 
     (function animationCallback() {
+
       var transformedData = self.filtersView.process(self.canvasView.getPixels());
       var shouldKeepDrawing = self.canvasView.draw(transformedData);
 
@@ -50,7 +51,8 @@ AppController.prototype = Object.assign({}, AppController.prototype, {
       //window.setTimeout(function() {
         self.rfid = window.requestAnimationFrame(animationCallback);
       //}, 20);
-    }())
+
+    }());
   }
 });
 
