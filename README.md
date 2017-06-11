@@ -22,6 +22,7 @@ Playing with the settings can produce a variety of images such as:
 
 
 <br/>
+
 **blurry rothkos**
 
 
