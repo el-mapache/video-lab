@@ -48,10 +48,8 @@ AppController.prototype = Object.assign({}, AppController.prototype, {
          self.rfid = null;
          return;
        }
-      //window.setTimeout(function() {
-        self.rfid = window.requestAnimationFrame(animationCallback);
-      //}, 20);
-
+      
+      self.rfid = window.requestAnimationFrame(animationCallback);
     }());
   }
 });

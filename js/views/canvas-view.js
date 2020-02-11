@@ -11,12 +11,14 @@ function CanvasView(el, stream) {
   this.canvasContext = this.canvas.getContext('2d');
   this.stream = stream;
   this.backingVideo = document.createElement('video');
+  
 
-  this.height = this.canvas.height;
-  this.width = this.canvas.width;
-
-  this.backingVideo.style.width = this.canvas.style.width = (this.canvas.width + 'px');
-  this.backingVideo.style.height = this.canvas.style.height = (this.canvas.height + 'px');
+  this.width = this.canvas.width = this.canvas.offsetWidth * window.devicePixelRatio;
+  this.height = this.canvas.height = this.canvas.offsetHeight * window.devicePixelRatio / 2;
+  //this.canvasContext.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+  
+  this.backingVideo.style.width = this.canvas.width / 2 + 'px';
+  this.backingVideo.style.height = this.canvas.height / 2 + 'px';
 
   this.initialize();
 }
@@ -33,7 +35,7 @@ CanvasView.prototype.initialize = function() {
     this.trigger('ON_VIDEO_LOAD');
   }.bind(this));
 
-  this.backingVideo.src = window.URL.createObjectURL(this.stream);
+  this.backingVideo.srcObject = this.stream;
   this.active = true;
 
   VL.Events.prototype.attachTo(this);
